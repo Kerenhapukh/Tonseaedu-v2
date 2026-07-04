@@ -1,0 +1,240 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { GraduationCap, ShieldCheck, User, UserRound } from "lucide-react";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"admin" | "guru" | "siswa">("siswa");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const initialRole = searchParams.get("role");
+    if (initialRole === "admin" || initialRole === "guru" || initialRole === "siswa") {
+      setRole(initialRole);
+    }
+
+    if (localStorage.getItem("tonsea_admin")) {
+      router.replace("/admin");
+      return;
+    }
+
+    if (localStorage.getItem("tonsea_user")) {
+      router.replace("/dashboard");
+    }
+  }, [router, searchParams]);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (role === "siswa") {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: identifier.trim(), password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Username / Password salah!");
+        }
+
+        localStorage.setItem("tonsea_user", data.user.username);
+        if (data.user.name) {
+          localStorage.setItem("tonsea_user_name", data.user.name);
+        }
+        if (data.user.kelas) {
+          localStorage.setItem("tonsea_user_kelas", data.user.kelas);
+        }
+        router.push("/dashboard");
+        return;
+      }
+
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: identifier.trim(),
+          password,
+          role,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `Email / kata sandi ${role} salah!`);
+      }
+
+      localStorage.setItem("tonsea_admin", data.user.username || identifier.trim());
+      localStorage.setItem("tonsea_admin_role", data.user.role || role);
+      if (data.user.namaLengkap) {
+        localStorage.setItem("tonsea_user_name", data.user.namaLengkap);
+      }
+      router.push("/admin");
+    } catch (error: any) {
+      alert(error.message || "Terjadi kesalahan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const roleLabel = role === "siswa" ? "Siswa" : role === "guru" ? "Guru" : "Admin";
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.24),_transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-4 relative overflow-hidden">
+      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
+
+      <div className="max-w-5xl w-full grid lg:grid-cols-[0.95fr_1.05fr] rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
+        <div className="hidden lg:flex flex-col justify-between bg-slate-950 text-white p-10 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.25),transparent_35%)]" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200">
+              <GraduationCap size={14} />
+              TonseaEdu
+            </div>
+            <h1 className="mt-6 text-5xl font-black tracking-tight leading-[0.95]">
+              Masuk sesuai
+              <br />
+              peran Anda.
+            </h1>
+            <p className="mt-5 max-w-md text-slate-300 leading-7">
+              Admin mengelola sistem, guru mengelola pembelajaran, dan siswa belajar dari materi yang sudah disiapkan.
+            </p>
+          </div>
+
+          <div className="relative space-y-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+              Admin dan guru masuk lewat email atau username.
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+              Siswa tetap memakai akun belajar yang sederhana.
+            </div>
+          </div>
+        </div>
+
+        <div className="p-7 sm:p-10">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <div className="bg-blue-600 w-14 h-14 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <GraduationCap size={30} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-950 tracking-tight">TonseaEdu</h1>
+              <p className="text-slate-500 text-sm">Masuk sesuai peran Anda</p>
+            </div>
+          </div>
+
+          <div className="mb-8 grid grid-cols-3 rounded-[1.4rem] bg-slate-100 p-1.5">
+            <button
+              type="button"
+              onClick={() => setRole("admin")}
+              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+                role === "admin" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <ShieldCheck size={16} />
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("guru")}
+              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+                role === "guru" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <UserRound size={16} />
+              Guru
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole("siswa")}
+              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+                role === "siswa" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <User size={16} />
+              Siswa
+            </button>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1">
+                {role === "siswa" ? "Nama Pengguna" : "Email / Username"}
+              </label>
+              <input
+                type="text"
+                required
+                placeholder={
+                  role === "siswa"
+                    ? "Masukkan nama pengguna..."
+                    : role === "guru"
+                      ? "Masukkan email guru..."
+                      : "Masukkan email atau username admin..."
+                }
+                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1">
+                Kata Sandi
+              </label>
+              <input
+                type="password"
+                required
+                placeholder={role === "siswa" ? "Masukkan kata sandi siswa..." : "Masukkan kata sandi akun..."}
+                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            {role === "guru" && (
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-slate-600">
+                Belum punya akun guru? <Link href="/register" className="font-semibold text-blue-700 hover:text-blue-800">Daftar guru</Link>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !identifier || !password}
+              className="w-full bg-slate-950 text-white py-4 rounded-2xl font-extrabold hover:bg-slate-800 active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10 disabled:bg-slate-300 disabled:shadow-none disabled:transform-none flex justify-center items-center mt-4"
+            >
+              {loading ? (
+                <div className="h-6 w-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              ) : role === "siswa" ? (
+                "Masuk Siswa"
+              ) : role === "guru" ? (
+                "Masuk Guru"
+              ) : (
+                "Masuk Admin"
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-slate-500">
+            {role === "guru" ? (
+              <span>
+                Guru baru? <Link href="/register" className="font-semibold text-blue-700 hover:text-blue-800">Daftar di sini</Link>
+              </span>
+            ) : role === "siswa" ? (
+              <span>Masuk dengan akun siswa yang sudah dibuat.</span>
+            ) : (
+              <span>Gunakan akun admin untuk mengelola sistem.</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

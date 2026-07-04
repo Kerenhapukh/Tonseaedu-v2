@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  namaLengkap String
+  username    String   @unique
+  email       String?
+  namaSekolah String?
+  nomorTelepon String?
+  password    String
+  role        String   @default("user") // "admin" (Guru) atau "user" (Siswa)
+  kelas       String? // Contoh: "7A", "7B", "8A", "9B"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String?
+  materi      Materi[]
+  kosakata    Kosakata[]
+  questions   Question[]
+
+  @@map("categories")
+}
+
+model Materi {
+  id         Int      @id @default(autoincrement())
+  judul      String
+  konten     String   @db.Text
+  kelas      String?  // Kelas: "7", "8", "9"
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("materi")
+}
+
+model Kosakata {
+  id         Int      @id @default(autoincrement())
+  tonsea     String
+  indonesia  String
+  audioUrl   String?
+  kelas      String?  // Kelas: "7", "8", "9"
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("kosakata")
+}
+
+model Question {
+  id            Int      @id @default(autoincrement())
+  pertanyaan    String
+  correctAnswer String
+  options       String[]
+  kelas         String?  // Kelas: "7", "8", "9"
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId    Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("questions")
+}
+
+model Score {
+  id             Int      @id @default(autoincrement())
+  username       String
+  kelas          String? // Kelas siswa saat mengerjakan kuis
+  score          Int
+  totalQuestions Int
+  createdAt      DateTime @default(now())
+
+  @@index([username])
+  @@map("scores")
+}

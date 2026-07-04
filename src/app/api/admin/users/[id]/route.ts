@@ -1,0 +1,83 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+
+// Use context parameter type for Next.js App Router API routes
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const resolvedParams = await params;
+    const user = await prisma.user.findUnique({
+      where: { id: Number(resolvedParams.id) },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      ...user,
+      name: user.namaLengkap,
+      email: user.email || user.username,
+      namaSekolah: user.namaSekolah,
+      nomorTelepon: user.nomorTelepon,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const resolvedParams = await params;
+    const body = await req.json();
+    const { username, email, password, name, namaLengkap, namaSekolah, nomorTelepon, role, kelas } = body;
+    const displayName = name || namaLengkap;
+    const loginIdentifier = (email || username || "").trim().toLowerCase();
+
+    const data: any = { role, kelas };
+    if (loginIdentifier) {
+      data.username = loginIdentifier;
+      data.email = loginIdentifier;
+    }
+    if (displayName) {
+      data.namaLengkap = displayName;
+    }
+    if (namaSekolah !== undefined) {
+      data.namaSekolah = namaSekolah || null;
+    }
+    if (nomorTelepon !== undefined) {
+      data.nomorTelepon = nomorTelepon || null;
+    }
+    
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+
+    const user = await prisma.user.update({
+      where: { id: Number(resolvedParams.id) },
+      data,
+    });
+
+    return NextResponse.json({
+      ...user,
+      name: user.namaLengkap,
+      email: user.email || user.username,
+      namaSekolah: user.namaSekolah,
+      nomorTelepon: user.nomorTelepon,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const resolvedParams = await params;
+    await prisma.user.delete({
+      where: { id: Number(resolvedParams.id) },
+    });
+    return NextResponse.json({ message: "User deleted successfully" });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+  }
+}
