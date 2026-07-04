@@ -66,12 +66,6 @@ export default function AdminDashboard() {
                 <ShieldCheck size={14} />
                 Admin / Pengelola Sistem
               </div>
-              <h1 className="mt-5 text-4xl lg:text-5xl font-black tracking-tight text-slate-950 leading-tight">
-                Pusat kontrol yang fokus, ringkas, dan mudah dipakai.
-              </h1>
-              <p className="mt-4 text-lg leading-8 text-slate-600 max-w-2xl">
-                Dari sini admin hanya mengelola dua hal yang memang menjadi tanggung jawabnya: kosakata dan akun guru.
-              </p>
             </div>
 
             <button

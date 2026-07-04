@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Mail, Phone, School, User, Lock, ShieldCheck } from "lucide-react";
+import { GraduationCap, Mail, Phone, School, User, Lock } from "lucide-react";
 
 export default function RegisterGuruPage() {
   const router = useRouter();
@@ -52,33 +52,7 @@ export default function RegisterGuruPage() {
       <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[520px] h-[520px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
       <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[520px] h-[520px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
 
-      <div className="w-full max-w-5xl grid lg:grid-cols-[0.9fr_1.1fr] rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
-        <div className="hidden lg:flex flex-col justify-between bg-slate-950 text-white p-10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.24),transparent_35%)]" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200">
-              <ShieldCheck size={14} />
-              Registrasi Guru
-            </div>
-            <h1 className="mt-6 text-5xl font-black tracking-tight leading-[0.95]">
-              Buat akun guru
-              <br />
-              dengan rapi.
-            </h1>
-            <p className="mt-5 max-w-md text-slate-300 leading-7">
-              Form ini disiapkan agar data guru tersimpan jelas sejak awal: nama lengkap, email, sekolah, dan kontak opsional.
-            </p>
-          </div>
-
-          <div className="space-y-3 relative">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              Setelah daftar, guru bisa langsung login dari halaman masuk.
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              Akses guru dan admin dipisahkan lewat role saat login.
-            </div>
-          </div>
-        </div>
+     <div className="w-full max-w-xl rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
 
         <div className="p-7 sm:p-10">
           <div className="mb-8 flex items-center gap-3 lg:hidden">

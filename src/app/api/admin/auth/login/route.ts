@@ -18,19 +18,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Role tidak valid" }, { status: 400 });
     }
 
-    const normalizedIdentifier = String(identifier).trim().toLowerCase();
+    const normalizedIdentifier = String(identifier).trim();
 
     const account = await prisma.user.findFirst({
       where: {
         OR: [
-          { username: normalizedIdentifier },
-          { email: normalizedIdentifier },
+          { username: { equals: normalizedIdentifier, mode: "insensitive" } },
+          { email: { equals: normalizedIdentifier, mode: "insensitive" } },
         ],
       },
     });
 
-    if (!account || account.role !== role) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    if (!account) {
+      return NextResponse.json({ error: "Akun tidak ditemukan" }, { status: 401 });
+    }
+
+    if (String(account.role).toLowerCase() !== String(role).toLowerCase()) {
+      return NextResponse.json({ error: "Peran tidak sesuai untuk akun ini" }, { status: 401 });
     }
 
     const isPasswordValid = await bcrypt.compare(password, account.password);

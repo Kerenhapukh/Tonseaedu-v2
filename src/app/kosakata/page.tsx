@@ -9,8 +9,8 @@ interface Kosakata {
   id: number;
   tonsea: string;
   indonesia: string;
-  audio_url: string | null;
-  category: { id: number; name: string };
+  audioUrl?: string | null;
+  category: { id: number; name: string } | null;
 }
 
 export default function KosakataPage() {
@@ -18,6 +18,7 @@ export default function KosakataPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isStudent, setIsStudent] = useState(false);
 
   useEffect(() => {
     api.get('/kosakata')
@@ -30,6 +31,17 @@ export default function KosakataPage() {
         setError("Gagal memuat daftar kosakata.");
         setLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    // consider user logged in as student when `tonsea_user` exists and not admin
+    try {
+      const isUser = !!localStorage.getItem('tonsea_user');
+      const isAdmin = !!localStorage.getItem('tonsea_admin');
+      setIsStudent(isUser && !isAdmin);
+    } catch (e) {
+      setIsStudent(false);
+    }
   }, []);
 
   const playAudio = (url: string | null) => {
@@ -103,15 +115,21 @@ export default function KosakataPage() {
                     <p className="text-slate-600 text-lg">{vocab.indonesia}</p>
                   </div>
                   
-                  {vocab.audio_url && (
-                    <button 
-                      onClick={() => playAudio(vocab.audio_url)}
-                      className="ml-4 p-4 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all shadow-sm group"
-                      title="Dengarkan pengucapan"
-                    >
-                      <Volume2 size={24} className="group-hover:scale-110 transition-transform" />
-                    </button>
-                  )}
+                  {vocab.audioUrl ? (
+                    isStudent ? (
+                      <button
+                        onClick={() => playAudio(vocab.audioUrl)}
+                        className="ml-4 p-4 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-xl transition-all shadow-sm group"
+                        title="Dengarkan pengucapan"
+                      >
+                        <Volume2 size={24} className="group-hover:scale-110 transition-transform" />
+                      </button>
+                    ) : (
+                      <div className="ml-4 p-3 rounded-xl bg-slate-100 text-slate-400 text-sm">
+                        Masuk sebagai siswa untuk mendengar audio
+                      </div>
+                    )
+                  ) : null}
                 </div>
               ))
             ) : (

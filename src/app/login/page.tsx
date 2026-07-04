@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GraduationCap, ShieldCheck, User, UserRound } from "lucide-react";
+import { GraduationCap, ShieldCheck, User, UserRound, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -86,39 +86,15 @@ export default function LoginPage() {
   };
 
   const roleLabel = role === "siswa" ? "Siswa" : role === "guru" ? "Guru" : "Admin";
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.24),_transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-4 relative overflow-hidden">
       <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
       <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
 
-      <div className="max-w-5xl w-full grid lg:grid-cols-[0.95fr_1.05fr] rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
-        <div className="hidden lg:flex flex-col justify-between bg-slate-950 text-white p-10 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.25),transparent_35%)]" />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-blue-200">
-              <GraduationCap size={14} />
-              TonseaEdu
-            </div>
-            <h1 className="mt-6 text-5xl font-black tracking-tight leading-[0.95]">
-              Masuk sesuai
-              <br />
-              peran Anda.
-            </h1>
-            <p className="mt-5 max-w-md text-slate-300 leading-7">
-              Admin mengelola sistem, guru mengelola pembelajaran, dan siswa belajar dari materi yang sudah disiapkan.
-            </p>
-          </div>
-
-          <div className="relative space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
-              Admin dan guru masuk lewat email atau username.
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
-              Siswa tetap memakai akun belajar yang sederhana.
-            </div>
-          </div>
-        </div>
+      <div className="max-w-md w-full grid grid-cols-1 rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
+        
 
         <div className="p-7 sm:p-10">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
@@ -127,7 +103,7 @@ export default function LoginPage() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-950 tracking-tight">TonseaEdu</h1>
-              <p className="text-slate-500 text-sm">Masuk sesuai peran Anda</p>
+              {/* Deskripsi singkat mobile dihilangkan sesuai permintaan */}
             </div>
           </div>
 
@@ -189,14 +165,24 @@ export default function LoginPage() {
               <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1">
                 Kata Sandi
               </label>
-              <input
-                type="password"
-                required
-                placeholder={role === "siswa" ? "Masukkan kata sandi siswa..." : "Masukkan kata sandi akun..."}
-                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder={role === "siswa" ? "Masukkan kata sandi siswa..." : "Masukkan kata sandi akun..."}
+                  className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {role === "guru" && (
