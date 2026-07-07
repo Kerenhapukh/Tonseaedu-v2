@@ -37,7 +37,9 @@ export async function GET(request: Request) {
     const formattedMateri = materi.map(m => ({
       ...m,
       title: m.judul,
-      content: m.konten
+      content: m.konten,
+      bab: m.bab,
+      ringkasan: m.ringkasan,
     }));
 
     return NextResponse.json({ success: true, data: formattedMateri });
@@ -53,14 +55,17 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { judul, konten, categoryId, title, content, kelas } = body;
+    const { judul, konten, categoryId, title, content, kelas, bab, ringkasan, summary, deskripsi } = body;
     
     const finalJudul = judul || title;
     const finalKonten = konten || content;
+    const finalRingkasan = ringkasan || summary || deskripsi || null;
+    const finalBab = bab || null;
+    const finalCategoryId = categoryId ? Number(categoryId) : null;
 
-    if (!finalJudul || !finalKonten || !categoryId) {
+    if (!finalJudul || !finalKonten) {
       return NextResponse.json(
-        { success: false, error: "Judul, konten, dan categoryId wajib diisi." },
+        { success: false, error: "Judul dan konten wajib diisi." },
         { status: 400 }
       );
     }
@@ -69,7 +74,9 @@ export async function POST(request: Request) {
       data: {
         judul: finalJudul,
         konten: finalKonten,
-        categoryId: Number(categoryId),
+        bab: finalBab,
+        ringkasan: finalRingkasan,
+        categoryId: finalCategoryId,
         kelas: kelas || null,
       }
     });

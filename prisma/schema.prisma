@@ -39,7 +39,9 @@ model Materi {
   id         Int      @id @default(autoincrement())
   judul      String
   konten     String   @db.Text
-  kelas      String?  // Kelas: "7", "8", "9"
+  bab        String?
+  ringkasan  String?  @db.Text
+  kelas      String?
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int
   createdAt  DateTime @default(now())

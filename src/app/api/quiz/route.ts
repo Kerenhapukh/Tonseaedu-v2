@@ -1,15 +1,38 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // Impor dari file yang baru dibuat
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Tambahkan log untuk memastikan env terbaca
-    console.log("DATABASE_URL check:", process.env.DATABASE_URL ? "Tersedia" : "HILANG");
+    const { searchParams } = new URL(request.url);
+    const kelasSiswa = searchParams.get('kelas');
 
-    const questions = await prisma.question.findMany();
+    const whereClause: any = {};
+    if (kelasSiswa) {
+      const tingkatKelas = kelasSiswa.replace(/\D/g, '');
+      if (tingkatKelas) {
+        whereClause.OR = [
+          { kelas: null },
+          { kelas: '' },
+          { kelas: tingkatKelas }
+        ];
+      }
+    }
+
+    const questions = await prisma.question.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const formattedQuestions = questions.map((question) => ({
+      id: question.id,
+      question: question.pertanyaan,
+      correct_answer: question.correctAnswer,
+      options: question.options,
+      kelas: question.kelas,
+    }));
 
     return NextResponse.json({
-      data: questions
+      data: formattedQuestions,
     });
   } catch (error: any) {
     console.error("PRISMA_ERROR:", error);

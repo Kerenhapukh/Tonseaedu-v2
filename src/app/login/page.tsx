@@ -224,11 +224,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-slate-500">
-            {role === "guru" ? (
-              <span>
-                Guru baru? <Link href="/register" className="font-semibold text-blue-700 hover:text-blue-800">Daftar di sini</Link>
-              </span>
-            ) : role === "siswa" ? (
+            {role === "siswa" ? (
               <span>Masuk dengan akun siswa yang sudah dibuat.</span>
             ) : (
               <span>Gunakan akun admin untuk mengelola sistem.</span>

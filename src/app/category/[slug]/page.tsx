@@ -28,6 +28,39 @@ interface Category {
   materi: Materi[];
 }
 
+interface UserKelasResult {
+  username?: string;
+  kelas?: string | null;
+}
+
+const getProgressKey = (username: string, kelas: string | null) => {
+  const normalizedKelas = kelas ? kelas.replace(/\D/g, '') || 'umum' : 'umum';
+  return `tonsea_progress_categories_${username}_${normalizedKelas}`;
+};
+
+const markCategoryProgress = (username: string, kelas: string | null, slug: string) => {
+  if (typeof window === 'undefined' || !username) {
+    return;
+  }
+
+  const key = getProgressKey(username, kelas);
+  const rawValue = localStorage.getItem(key);
+  let completedSlugs: string[] = [];
+
+  if (rawValue) {
+    try {
+      completedSlugs = JSON.parse(rawValue);
+    } catch {
+      completedSlugs = [];
+    }
+  }
+
+  if (!completedSlugs.includes(slug)) {
+    completedSlugs.push(slug);
+    localStorage.setItem(key, JSON.stringify(completedSlugs));
+  }
+};
+
 export default function CategoryDetail() {
   const params = useParams();
   const slug = params.slug;
@@ -39,9 +72,7 @@ export default function CategoryDetail() {
 
   useEffect(() => {
     if (slug) {
-      setLoading(true);
-
-      const fetchCategoryWithKelas = async (kelasFilter: string | null) => {
+      const fetchCategoryWithKelas = async (kelasFilter: string | null, currentUser: string | null, currentKelas: string | null) => {
         let url = `/categories/${slug}`;
         if (kelasFilter) {
           url += `?kelas=${kelasFilter}`;
@@ -52,6 +83,9 @@ export default function CategoryDetail() {
             console.log("Response API:", res.data);
             const data = res.data.data || res.data;
             setCategory(data);
+            if (data?.materi?.length > 0 && currentUser) {
+              markCategoryProgress(currentUser, currentKelas, String(slug));
+            }
             setLoading(false);
           })
           .catch(err => {
@@ -68,8 +102,8 @@ export default function CategoryDetail() {
         if (!userKelas && savedUser) {
           try {
             const res = await fetch('/api/admin/users');
-            const users = await res.json();
-            const currentUser = users.find((u: any) => u.username === savedUser);
+            const users = (await res.json()) as UserKelasResult[];
+            const currentUser = users.find((u) => u.username === savedUser);
             if (currentUser && currentUser.kelas) {
               userKelas = currentUser.kelas;
               localStorage.setItem("tonsea_user_kelas", currentUser.kelas as string);
@@ -79,7 +113,7 @@ export default function CategoryDetail() {
           }
         }
         
-        fetchCategoryWithKelas(userKelas);
+        fetchCategoryWithKelas(userKelas, savedUser, userKelas);
       };
 
       initData();
