@@ -14,6 +14,8 @@ type Siswa = {
   kelas?: string | null;
 };
 
+const KELAS_OPTIONS = ["7", "8", "9"];
+
 const emptyForm = {
   username: "",
   password: "",
@@ -25,6 +27,7 @@ async function logoutAll() {
   await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => null);
   localStorage.removeItem("tonsea_user");
   localStorage.removeItem("tonsea_admin");
+  localStorage.removeItem("tonsea_user_role");
   localStorage.removeItem("tonsea_user_name");
   localStorage.removeItem("tonsea_user_kelas");
   localStorage.removeItem("tonsea_admin_role");
@@ -157,7 +160,7 @@ export default function GuruStudentsPage() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                   <ShieldCheck size={14} />
-                  Guru / Pengelola
+                  Guru / Pengelola Pembelajaran
                 </div>
                 <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Kelola Siswa</h1>
                 <p className="mt-3 max-w-2xl text-slate-600 leading-7">Tambah, ubah, dan hapus akun siswa untuk keperluan pembelajaran.</p>
@@ -207,12 +210,24 @@ export default function GuruStudentsPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none transition-colors focus:border-blue-500 focus:bg-white" />
+                <input type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none transition-colors focus:border-blue-500 focus:bg-white" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Kelas (opsional)</label>
-                <input type="text" value={formData.kelas} onChange={(e) => setFormData({ ...formData, kelas: e.target.value })} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none transition-colors focus:border-blue-500 focus:bg-white" />
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Kelas</label>
+                <select
+                  required
+                  value={formData.kelas}
+                  onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                >
+                  <option value="">Pilih kelas siswa</option>
+                  {KELAS_OPTIONS.map((kelas) => (
+                    <option key={kelas} value={kelas}>
+                      Kelas {kelas}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="md:col-span-2 mt-2 flex flex-col gap-3 md:flex-row">

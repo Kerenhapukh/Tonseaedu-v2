@@ -25,6 +25,7 @@ const adminModules = [
 async function logoutAdmin() {
   await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => null);
   localStorage.removeItem("tonsea_user");
+  localStorage.removeItem("tonsea_user_role");
   localStorage.removeItem("tonsea_admin");
   localStorage.removeItem("tonsea_user_name");
   localStorage.removeItem("tonsea_user_kelas");
@@ -35,7 +36,8 @@ export default function AdminDashboard() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem("tonsea_admin")) {
+    const role = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
+    if (!localStorage.getItem("tonsea_admin") || role !== "admin") {
       router.replace("/login");
       return;
     }

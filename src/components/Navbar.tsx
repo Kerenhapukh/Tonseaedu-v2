@@ -20,7 +20,9 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("tonsea_user");
+    localStorage.removeItem("tonsea_user_role");
     localStorage.removeItem("tonsea_admin");
+    localStorage.removeItem("tonsea_admin_role");
     setUsername(null);
     setIsProfileOpen(false);
     router.replace("/");

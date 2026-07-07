@@ -10,12 +10,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Username and password are required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { username },
+    const normalizedUsername = String(username).trim();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: { equals: normalizedUsername, mode: "insensitive" } },
+          { email: { equals: normalizedUsername, mode: "insensitive" } },
+          { namaLengkap: { equals: normalizedUsername, mode: "insensitive" } },
+        ],
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: "Akun tidak ditemukan" }, { status: 404 });
+    }
+
+    if (String(user.role).toLowerCase() !== "siswa") {
+      return NextResponse.json({ error: "Akun ini bukan akun siswa" }, { status: 403 });
     }
 
     const isValid = await bcrypt.compare(password, user.password);

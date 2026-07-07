@@ -9,7 +9,7 @@ export default function LeaderboardPage() {
   const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [kelasOptions, setKelasOptions] = useState<string[]>(['Semua', '7A', '7B', '8A', '8B', '9A', '9B']);
+  const [kelasOptions] = useState<string[]>(['Semua', '7', '8', '9']);
   const [filterKelas, setFilterKelas] = useState<string>('Semua');
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function LeaderboardPage() {
                 onChange={(e) => setFilterKelas(e.target.value)}
               >
                 {kelasOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
+                  <option key={opt} value={opt}>{opt === 'Semua' ? 'Semua' : `Kelas ${opt}`}</option>
                 ))}
               </select>
             </div>

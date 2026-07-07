@@ -27,9 +27,15 @@ export async function POST(req: Request) {
     const { username, email, password, name, namaLengkap, namaSekolah, nomorTelepon, role, kelas } = body;
     const displayName = name || namaLengkap;
     const loginIdentifier = (email || username || "").trim().toLowerCase();
+    const normalizedRole = String(role || "guru").toLowerCase();
+    const normalizedKelas = typeof kelas === "string" ? kelas.trim() : "";
 
     if (!loginIdentifier || !password || !displayName) {
       return NextResponse.json({ error: "Email/username, nama lengkap, dan password wajib diisi" }, { status: 400 });
+    }
+
+    if (normalizedRole === "siswa" && !normalizedKelas) {
+      return NextResponse.json({ error: "Kelas wajib diisi untuk siswa" }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -55,8 +61,8 @@ export async function POST(req: Request) {
         namaLengkap: displayName,
         namaSekolah: namaSekolah || null,
         nomorTelepon: nomorTelepon || null,
-        kelas: kelas || null,
-        role: role || "guru",
+        kelas: normalizedRole === "siswa" ? normalizedKelas : kelas || null,
+        role: normalizedRole,
       },
     });
 

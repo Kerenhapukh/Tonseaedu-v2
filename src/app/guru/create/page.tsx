@@ -14,9 +14,9 @@ export default function GuruCreateQuiz() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem('tonsea_admin_role') || '';
-    const isAdmin = !!localStorage.getItem('tonsea_admin');
-    if (!isAdmin || role.toLowerCase() !== 'guru') {
+    const role = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
+    const isAllowed = !!localStorage.getItem('tonsea_admin') && role === 'guru';
+    if (!isAllowed) {
       router.replace('/login');
       return;
     }
@@ -86,8 +86,13 @@ export default function GuruCreateQuiz() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Kelas (opsional, mis. 7A)</label>
-            <input value={kelas} onChange={(e) => setKelas(e.target.value)} className="w-full rounded-md border p-3" />
+            <label className="block text-sm font-medium mb-2">Kelas (opsional, 7 / 8 / 9)</label>
+            <select value={kelas} onChange={(e) => setKelas(e.target.value)} className="w-full rounded-md border p-3 bg-white">
+              <option value="">-- Berlaku untuk semua kelas --</option>
+              <option value="7">Kelas 7</option>
+              <option value="8">Kelas 8</option>
+              <option value="9">Kelas 9</option>
+            </select>
           </div>
 
           <div className="flex justify-end">

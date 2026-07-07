@@ -25,13 +25,27 @@ export default function Home() {
   useEffect(() => {
     // Pastikan pengecekan dari sisi klien
     if (typeof window !== "undefined") {
+      const adminRole = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
       if (localStorage.getItem("tonsea_admin")) {
-        router.replace("/admin");
-        return;
+        if (adminRole === "guru") {
+          router.replace("/guru");
+          return;
+        }
+
+        if (adminRole === "admin") {
+          router.replace("/admin");
+          return;
+        }
       }
 
       const savedUser = localStorage.getItem("tonsea_user");
       if (!savedUser) {
+        router.replace("/login");
+        return;
+      }
+
+      const savedUserRole = (localStorage.getItem("tonsea_user_role") || "siswa").toLowerCase();
+      if (savedUserRole !== "siswa") {
         router.replace("/login");
         return;
       }

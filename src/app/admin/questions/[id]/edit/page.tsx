@@ -3,11 +3,14 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, BookOpen } from "lucide-react";
 
 export default function EditQuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const resolvedParams = use(params);
   const id = resolvedParams.id;
+  const [role, setRole] = useState('');
+  const isGuru = role.toLowerCase() === 'guru';
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +25,10 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
   });
 
   useEffect(() => {
-    if (!localStorage.getItem('tonsea_admin')) {
+    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
+    setRole(currentRole);
+    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (!isPrivileged) {
       router.replace('/login');
       return;
     }
@@ -76,7 +82,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
       });
 
       if (res.ok) {
-        router.push("/admin/questions");
+        router.push(isGuru ? "/guru" : "/admin/questions");
         router.refresh();
       } else {
         alert("Gagal memperbarui soal");
@@ -98,14 +104,21 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <Link href="/admin/questions" className="text-sm text-gray-500 hover:text-blue-600 mb-4 inline-block">
-        ← Kembali ke Daftar Soal
-      </Link>
-      
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Edit Soal Tonsea</h1>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.08),_transparent_24%),linear-gradient(to_bottom,_#ffffff_0%,_#f8fafc_40%,_#f8fafc_100%)] px-4 py-6 md:px-8 md:py-8 text-slate-800">
+      <div className="max-w-2xl mx-auto">
+        <div className="rounded-[2rem] border border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-6 md:p-8">
+          <Link href={isGuru ? "/guru" : "/admin/questions"} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
+            <ArrowLeft size={16} /> {isGuru ? "Kembali ke Dashboard Guru" : "Kembali ke Daftar Soal"}
+          </Link>
 
-      <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            <BookOpen size={14} />
+            {isGuru ? "Guru / Pengelola Pembelajaran" : "Admin / Pengelola Sistem"}
+          </div>
+
+          <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Edit Soal Tonsea</h1>
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         {/* Kategori dan Kelas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -185,14 +198,16 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
           </select>
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:bg-gray-300"
-        >
-          {submitting ? "Menyimpan Perubahan..." : "Update Soal"}
-        </button>
-      </form>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-full bg-slate-900 text-white py-3.5 font-semibold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all disabled:bg-slate-300"
+            >
+              {submitting ? "Menyimpan Perubahan..." : "Update Soal"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

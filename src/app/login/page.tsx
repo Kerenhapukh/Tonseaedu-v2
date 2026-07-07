@@ -19,9 +19,17 @@ export default function LoginPage() {
       setRole(initialRole);
     }
 
+    const savedAdminRole = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
     if (localStorage.getItem("tonsea_admin")) {
-      router.replace("/admin");
-      return;
+      if (savedAdminRole === "guru") {
+        router.replace("/guru");
+        return;
+      }
+
+      if (savedAdminRole === "admin") {
+        router.replace("/admin");
+        return;
+      }
     }
 
     if (localStorage.getItem("tonsea_user")) {
@@ -46,7 +54,10 @@ export default function LoginPage() {
           throw new Error(data.error || "Username / Password salah!");
         }
 
+        localStorage.removeItem("tonsea_admin");
+        localStorage.removeItem("tonsea_admin_role");
         localStorage.setItem("tonsea_user", data.user.username);
+        localStorage.setItem("tonsea_user_role", data.user.role || "siswa");
         if (data.user.name) {
           localStorage.setItem("tonsea_user_name", data.user.name);
         }
@@ -72,12 +83,16 @@ export default function LoginPage() {
         throw new Error(data.error || `Email / kata sandi ${role} salah!`);
       }
 
+      localStorage.removeItem("tonsea_user");
+      localStorage.removeItem("tonsea_user_role");
+      localStorage.removeItem("tonsea_user_name");
+      localStorage.removeItem("tonsea_user_kelas");
       localStorage.setItem("tonsea_admin", data.user.username || identifier.trim());
       localStorage.setItem("tonsea_admin_role", data.user.role || role);
       if (data.user.namaLengkap) {
         localStorage.setItem("tonsea_user_name", data.user.namaLengkap);
       }
-      router.push("/admin");
+      router.push(data.user.role === "guru" ? "/guru" : "/admin");
     } catch (error: any) {
       alert(error.message || "Terjadi kesalahan.");
     } finally {
@@ -143,14 +158,14 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
               <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1">
-                {role === "siswa" ? "Nama Pengguna" : "Email / Username"}
+                {role === "siswa" ? "Username / Nama Lengkap" : "Email / Username"}
               </label>
               <input
                 type="text"
                 required
                 placeholder={
                   role === "siswa"
-                    ? "Masukkan nama pengguna..."
+                    ? "Masukkan username atau nama lengkap..."
                     : role === "guru"
                       ? "Masukkan email guru..."
                       : "Masukkan email atau username admin..."

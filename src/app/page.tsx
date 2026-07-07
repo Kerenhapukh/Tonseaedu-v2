@@ -9,7 +9,6 @@ GraduationCap,
 ChevronRight,
 MapPin, 
 Headphones, 
-MonitorPlay, 
 Target, 
 Activity,
 Trophy, 
@@ -281,30 +280,65 @@ export default function LandingPage() {
   </section>
 
   {/* Fitur Section */}
-  <section id="fitur" className="py-24 px-6 bg-slate-50 w-full">
-    <div className="max-w-7xl mx-auto">
-      <div className="text-center max-w-2xl mx-auto mb-16">
-        <h3 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Belajar Tak Pernah Seseru Ini</h3>
-        <p className="text-lg text-slate-600">Fitur-fitur inovatif yang dirancang khusus untuk memaksimalkan dan mempermudah proses pemahaman.</p>
+  <section id="fitur" className="relative py-24 px-6 w-full overflow-hidden bg-[linear-gradient(to_bottom,#f8fafc_0%,#eef2ff_100%)]">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(168,85,247,0.08),transparent_22%)]"></div>
+    <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-3xl mx-auto text-center mb-16">
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm mb-5">
+          <Sparkles size={16} className="text-blue-600" />
+          Fitur Utama
+        </div>
       </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {[
-          { icon: BookOpen, title: "Materi Interaktif", desc: "Modul teks adaptif yang disusun rapi, mudah dibaca, dan jauh dari kata membosankan.", color: "text-blue-600", bg: "bg-blue-100", border: "group-hover:border-blue-400" },
-          { icon: Headphones, title: "Audio Pembelajaran", desc: "Fitur putar audio untuk memastikan pelafalan kosakatamu tepat seperti penutur asli.", color: "text-orange-600", bg: "bg-orange-100", border: "group-hover:border-orange-400" },
-          { icon: MonitorPlay, title: "Video Edukatif", desc: "Animasi dan ilustrasi visual terintegrasi demi daya serap memori jangka panjang.", color: "text-purple-600", bg: "bg-purple-100", border: "group-hover:border-purple-400" },
-          { icon: Activity, title: "Kuis Menantang", desc: "Latihan soal dan kuis berbatas waktu yang menstimulasi adrenalin belajarmu.", color: "text-green-600", bg: "bg-green-100", border: "group-hover:border-green-400" },
-          { icon: Trophy, title: "Sistem Leaderboard", desc: "Kumpulkan poin setiap selesai kuis. Jadilah peringkat 1 di seluruh sekolah!", color: "text-yellow-600", bg: "bg-yellow-100", border: "group-hover:border-yellow-400" },
-          { icon: Users, title: "Jejaring Kompetitif", desc: "Ajak dan tantang teman-teman sekelasmu untuk adu pengetahuan bahasa Tonsea.", color: "text-rose-600", bg: "bg-rose-100", border: "group-hover:border-rose-400" }
-        ].map((feature, i) => (
-          <div key={i} className={`bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-2xl hover:shadow-slate-200 hover:-translate-y-2 transition-all duration-300 text-left group ${feature.border}`}>
-            <div className={`w-16 h-16 ${feature.bg} ${feature.color} flex items-center justify-center rounded-2xl mb-6 shadow-inner group-hover:scale-110 transition-transform duration-300`}>
-              <feature.icon size={32} strokeWidth={2} />
+      <div className="grid lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-5 rounded-[2rem] border border-slate-200 bg-white/90 backdrop-blur p-8 shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner">
+              <BookOpen size={24} strokeWidth={2} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-            <p className="text-slate-600 leading-relaxed">{feature.desc}</p>
+            <div>
+              <p className="text-sm font-semibold text-slate-500">Pengalaman belajar</p>
+              <h4 className="text-2xl font-black text-slate-950 tracking-tight">Satu tampilan, banyak manfaat</h4>
+            </div>
           </div>
-        ))}
+          <p className="text-slate-600 leading-relaxed mb-8">
+            TonseaEdu memadukan materi, audio, kuis, dan kompetisi.
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { label: "Materi", value: "Interaktif" },
+              { label: "Audio", value: "Pelafalan" },
+              { label: "Kuis", value: "Real-time" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
+                <p className="mt-2 text-lg font-bold text-slate-900">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-7 grid sm:grid-cols-2 gap-6">
+          {[
+            { icon: BookOpen, title: "Materi Interaktif", desc: "Modul teks adaptif yang disusun rapi, mudah dibaca, dan jauh dari kata membosankan.", color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
+            { icon: Headphones, title: "Audio Pembelajaran", desc: "Fitur putar audio untuk memastikan pelafalan kosakatamu tepat seperti penutur asli.", color: "text-orange-600", bg: "bg-orange-100", border: "border-orange-200" },
+            { icon: Activity, title: "Kuis Menantang", desc: "Latihan soal dan kuis berbatas waktu yang menstimulasi adrenalin belajarmu.", color: "text-green-600", bg: "bg-green-100", border: "border-green-200" },
+            { icon: Trophy, title: "Sistem Leaderboard", desc: "Kumpulkan poin setiap selesai kuis. Jadilah peringkat 1 di seluruh sekolah!", color: "text-yellow-600", bg: "bg-yellow-100", border: "border-yellow-200" },
+            { icon: Users, title: "Jejaring Kompetitif", desc: "Ajak dan tantang teman-teman sekelasmu untuk adu pengetahuan bahasa Tonsea.", color: "text-rose-600", bg: "bg-rose-100", border: "border-rose-200" }
+          ].map((feature, i) => (
+            <div key={i} className={`group rounded-[2rem] border ${feature.border} bg-white/95 p-6 shadow-[0_16px_50px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)]`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-14 h-14 ${feature.bg} ${feature.color} flex items-center justify-center rounded-2xl shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300`}>
+                  <feature.icon size={28} strokeWidth={2} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xl font-bold text-slate-950 mb-2 leading-snug">{feature.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{feature.desc}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   </section>
@@ -334,7 +368,7 @@ export default function LandingPage() {
         </ul>
       </div>
       <div className="md:col-span-7 lg:col-span-4">
-        <h3 className="text-lg font-bold mb-6 text-slate-900">Hubungi Kami</h3>
+        <h3 className="text-lg font-bold mb-6 text-slate-900">Hubungi</h3>
         <ul className="space-y-5 text-slate-600 text-sm font-medium">
           <li className="flex items-start gap-3">
             <div className="mt-1 p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0 border border-blue-100"><MapPin size={18} /></div>

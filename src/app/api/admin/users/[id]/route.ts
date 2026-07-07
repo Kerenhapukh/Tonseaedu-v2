@@ -33,8 +33,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const { username, email, password, name, namaLengkap, namaSekolah, nomorTelepon, role, kelas } = body;
     const displayName = name || namaLengkap;
     const loginIdentifier = (email || username || "").trim().toLowerCase();
+    const normalizedRole = typeof role === "string" ? role.toLowerCase() : undefined;
+    const normalizedKelas = typeof kelas === "string" ? kelas.trim() : "";
 
-    const data: any = { role, kelas };
+    if (normalizedRole === "siswa" && !normalizedKelas) {
+      return NextResponse.json({ error: "Kelas wajib diisi untuk siswa" }, { status: 400 });
+    }
+
+    const data: any = {};
+    if (normalizedRole) {
+      data.role = normalizedRole;
+    }
+    if (normalizedRole === "siswa") {
+      data.kelas = normalizedKelas;
+    } else if (kelas !== undefined) {
+      data.kelas = kelas || null;
+    }
     if (loginIdentifier) {
       data.username = loginIdentifier;
       data.email = loginIdentifier;
