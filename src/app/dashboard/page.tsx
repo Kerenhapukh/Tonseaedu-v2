@@ -277,8 +277,6 @@ export default function Home() {
               </div>
               <p className="text-sm text-slate-500">Siswa kelas {session.kelas?.replace(/\D/g, '') || '-'} melihat konten yang disesuaikan oleh guru.</p>
               <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <BarChart3 size={16} className="text-slate-400" />
-                Progress otomatis tersinkron dari materi dan kuis.
               </div>
             </div>
           </div>

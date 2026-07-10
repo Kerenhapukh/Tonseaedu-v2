@@ -11,13 +11,35 @@ export default function LeaderboardPage() {
 
   const [kelasOptions] = useState<string[]>(['Semua', '7', '8', '9']);
   const [filterKelas, setFilterKelas] = useState<string>('Semua');
+  const [isSiswa, setIsSiswa] = useState(false);
+  const [siswaKelasLabel, setSiswaKelasLabel] = useState<string>('');
 
   useEffect(() => {
-    // Jika ada session user, set default filter sesuai kelasnya (bila ada)
-    const userKelas = localStorage.getItem("tonsea_user_kelas");
-    if (userKelas && !filterKelas) {
-      setFilterKelas(userKelas);
+    // Tentukan role: siswa vs guru/admin
+    const adminRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
+    const isAdminOrGuru = !!localStorage.getItem('tonsea_admin') && (adminRole === 'admin' || adminRole === 'guru');
+
+    if (isAdminOrGuru) {
+      // Guru/Admin: bebas pilih kelas, default "Semua"
+      setIsSiswa(false);
+      setFilterKelas('Semua');
+      return;
     }
+
+    // Siswa: kunci filter ke kelasnya sendiri
+    const userKelas = localStorage.getItem('tonsea_user_kelas');
+    if (userKelas) {
+      const normalized = userKelas.replace(/\D/g, '');
+      if (normalized) {
+        setIsSiswa(true);
+        setFilterKelas(normalized);
+        setSiswaKelasLabel(`Kelas ${normalized}`);
+        return;
+      }
+    }
+
+    // Fallback: siswa tanpa data kelas tetap lihat "Semua"
+    setIsSiswa(false);
   }, []);
 
   useEffect(() => {
@@ -54,15 +76,21 @@ export default function LeaderboardPage() {
             <h1 className="text-xl font-black tracking-tight">PAPAN PERINGKAT</h1>
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm font-bold text-slate-500">Kelas:</span>
-              <select 
-                className="bg-white border outline-none text-sm font-bold text-blue-600 rounded-lg px-2 py-1 shadow-sm"
-                value={filterKelas}
-                onChange={(e) => setFilterKelas(e.target.value)}
-              >
-                {kelasOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt === 'Semua' ? 'Semua' : `Kelas ${opt}`}</option>
-                ))}
-              </select>
+              {isSiswa ? (
+                <span className="bg-blue-50 border border-blue-100 text-sm font-bold text-blue-700 rounded-lg px-3 py-1">
+                  {siswaKelasLabel}
+                </span>
+              ) : (
+                <select 
+                  className="bg-white border outline-none text-sm font-bold text-blue-600 rounded-lg px-2 py-1 shadow-sm"
+                  value={filterKelas}
+                  onChange={(e) => setFilterKelas(e.target.value)}
+                >
+                  {kelasOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt === 'Semua' ? 'Semua' : `Kelas ${opt}`}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
           <div className="w-10"></div> {/* Spacer */}

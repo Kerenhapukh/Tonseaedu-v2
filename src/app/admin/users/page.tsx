@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LogOut, Pencil, Plus, Search, ShieldCheck, Trash2, UserCog } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Search, ShieldCheck, Trash2, UserCog } from "lucide-react";
 
 type Guru = {
   id: number;
@@ -19,15 +19,6 @@ const emptyForm = {
   password: "",
   name: "",
 };
-
-async function logoutAdmin() {
-  await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => null);
-  localStorage.removeItem("tonsea_user");
-  localStorage.removeItem("tonsea_user_role");
-  localStorage.removeItem("tonsea_admin");
-  localStorage.removeItem("tonsea_user_name");
-  localStorage.removeItem("tonsea_user_kelas");
-}
 
 export default function AdminGuruPage() {
   const router = useRouter();
@@ -149,11 +140,6 @@ export default function AdminGuruPage() {
     [gurus, searchQuery]
   );
 
-  const handleLogout = async () => {
-    await logoutAdmin();
-    router.replace("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -185,22 +171,13 @@ export default function AdminGuruPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <LogOut size={16} />
-                Logout
-              </button>
-              <button
-                onClick={() => handleOpenForm(null)}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:bg-slate-800 transition-all"
-              >
-                <Plus size={16} />
-                Tambah Guru
-              </button>
-            </div>
+          <button
+              onClick={() => handleOpenForm(null)}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:bg-slate-800 transition-all"
+            >
+              <Plus size={16} />
+              Tambah Guru
+            </button>
           </div>
         </div>
 

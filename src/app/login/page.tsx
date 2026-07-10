@@ -222,14 +222,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-slate-500">
-            {role === "siswa" ? (
-              <span>Masuk dengan akun siswa yang sudah dibuat.</span>
-            ) : (
-              <span>Gunakan akun admin untuk mengelola sistem.</span>
-            )}
-          </div>
         </div>
       </div>
     </div>

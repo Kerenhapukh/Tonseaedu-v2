@@ -46,16 +46,6 @@ export default function AdminMateriPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  const handleLogout = async () => {
-    await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => null);
-    localStorage.removeItem('tonsea_admin');
-    localStorage.removeItem('tonsea_admin_role');
-    localStorage.removeItem('tonsea_user');
-    localStorage.removeItem('tonsea_user_role');
-    localStorage.removeItem('tonsea_user_kelas');
-    router.replace('/');
-  };
-
  const fetchMateri = async () => {
   try {
     const resMateri = await fetch('/api/materi');
@@ -248,14 +238,6 @@ export default function AdminMateriPage() {
                 </p>
               </div>
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                Logout
-              </button>
               <button
                 onClick={resetForm}
                 className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 ${
@@ -267,7 +249,6 @@ export default function AdminMateriPage() {
                 <Plus size={18} />
                 {showForm ? 'Tutup Form' : 'Tambah Materi Baru'}
               </button>
-            </div>
           </div>
         </div>
 
