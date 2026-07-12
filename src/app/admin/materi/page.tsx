@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Materi {
@@ -12,6 +12,7 @@ interface Materi {
   bab?: string | null;
   ringkasan?: string | null;
   kelas?: string | null;
+  videoUrl?: string | null;
   category?: {
     id: number;
     name: string;
@@ -25,6 +26,13 @@ const normalizeKelas = (kelas?: string | null) => {
   if (!kelas) return 'umum';
   const onlyNumber = kelas.replace(/\D/g, '');
   return onlyNumber || 'umum';
+};
+
+// Mengubah link YouTube biasa (watch?v=, youtu.be/, shorts/) menjadi URL embed
+const getYoutubeEmbedUrl = (url?: string | null) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
 
 export default function AdminMateriPage() {
@@ -43,26 +51,27 @@ export default function AdminMateriPage() {
     title: '',
     ringkasan: '',
     content: '',
+    videoUrl: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
- const fetchMateri = async () => {
-  try {
-    const resMateri = await fetch('/api/materi');
-    const dataMateri = await resMateri.json();
-    const list = Array.isArray(dataMateri?.data)
-      ? dataMateri.data
-      : Array.isArray(dataMateri)
-      ? dataMateri
-      : [];
-    setMateriList(list);
-  } catch (error) {
-    console.error('Gagal mengambil data materi:', error);
-    setMateriList([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchMateri = async () => {
+    try {
+      const resMateri = await fetch('/api/materi');
+      const dataMateri = await resMateri.json();
+      const list = Array.isArray(dataMateri?.data)
+        ? dataMateri.data
+        : Array.isArray(dataMateri)
+        ? dataMateri
+        : [];
+      setMateriList(list);
+    } catch (error) {
+      console.error('Gagal mengambil data materi:', error);
+      setMateriList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
@@ -102,6 +111,10 @@ export default function AdminMateriPage() {
       return alert('Mohon lengkapi kelas, bab, judul, ringkasan, dan isi materi!');
     }
 
+    if (formData.videoUrl && !getYoutubeEmbedUrl(formData.videoUrl)) {
+      return alert('Link YouTube tidak valid. Gunakan format seperti https://www.youtube.com/watch?v=xxxxx');
+    }
+
     setSubmitting(true);
     try {
       const url = isEditing && editId ? `/api/materi/${editId}` : '/api/materi';
@@ -116,12 +129,13 @@ export default function AdminMateriPage() {
           kelas: formData.kelas,
           bab: formData.bab,
           ringkasan: formData.ringkasan,
+          videoUrl: formData.videoUrl || null,
         }),
       });
 
       if (res.ok) {
         alert(isEditing ? 'Materi berhasil diperbarui!' : 'Materi berhasil ditambahkan!');
-        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '' });
+        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
         setShowForm(false);
         setIsEditing(false);
         setEditId(null);
@@ -143,6 +157,7 @@ export default function AdminMateriPage() {
       title: materi.title,
       ringkasan: materi.ringkasan || materi.content,
       content: materi.content,
+      videoUrl: materi.videoUrl || '',
     });
     setEditId(materi.id);
     setIsEditing(true);
@@ -153,7 +168,7 @@ export default function AdminMateriPage() {
   const resetForm = () => {
     setShowForm(!showForm);
     if (!showForm) {
-      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '' });
+      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
       setIsEditing(false);
       setEditId(null);
     }
@@ -176,40 +191,62 @@ export default function AdminMateriPage() {
     }
   };
 
-  const renderMateriCard = (materi: Materi) => (
-    <article key={materi.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-          Kelas {normalizeKelas(materi.kelas) === 'umum' ? 'Umum' : normalizeKelas(materi.kelas)}
-        </span>
-        <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-          {materi.bab || 'BAB belum diisi'}
-        </span>
-      </div>
+  const renderMateriCard = (materi: Materi) => {
+    const embedUrl = getYoutubeEmbedUrl(materi.videoUrl);
 
-      <h3 className="text-lg font-black text-slate-950 leading-tight">{materi.title}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-4">
-        {materi.ringkasan || materi.content}
-      </p>
+    return (
+      <article key={materi.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+            Kelas {normalizeKelas(materi.kelas) === 'umum' ? 'Umum' : normalizeKelas(materi.kelas)}
+          </span>
+          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+            {materi.bab || 'BAB belum diisi'}
+          </span>
+          {embedUrl && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
+              <PlayCircle size={12} />
+              Video
+            </span>
+          )}
+        </div>
 
-      <div className="mt-5 flex items-center justify-end gap-2">
-        <button
-          onClick={() => handleEditClick(materi)}
-          className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
-        >
-          <Pencil size={16} />
-          Edit
-        </button>
-        <button
-          onClick={() => handleDelete(materi.id)}
-          className="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
-        >
-          <Trash2 size={16} />
-          Hapus
-        </button>
-      </div>
-    </article>
-  );
+        <h3 className="text-lg font-black text-slate-950 leading-tight">{materi.title}</h3>
+        <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-4">
+          {materi.ringkasan || materi.content}
+        </p>
+
+        {embedUrl && (
+          <div className="mt-4 aspect-video rounded-xl overflow-hidden border border-slate-200">
+            <iframe
+              src={embedUrl}
+              title={materi.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={() => handleEditClick(materi)}
+            className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            <Pencil size={16} />
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(materi.id)}
+            className="inline-flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
+          >
+            <Trash2 size={16} />
+            Hapus
+          </button>
+        </div>
+      </article>
+    );
+  };
 
   if (loading) return <div className="p-8 text-center text-slate-500 mt-20">Memuat data materi...</div>;
 
@@ -234,21 +271,21 @@ export default function AdminMateriPage() {
                   Materi per Kelas
                 </h1>
                 <p className="mt-2 text-slate-600">
-                  Setiap materi diatur per kelas, bab, judul, dan ringkasan singkat.
+                  Setiap materi diatur per kelas, bab, judul, ringkasan, dan video pendukung.
                 </p>
               </div>
             </div>
-              <button
-                onClick={resetForm}
-                className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 ${
-                  showForm
-                    ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none'
-                    : 'bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800'
-                }`}
-              >
-                <Plus size={18} />
-                {showForm ? 'Tutup Form' : 'Tambah Materi Baru'}
-              </button>
+            <button
+              onClick={resetForm}
+              className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 ${
+                showForm
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none'
+                  : 'bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800'
+              }`}
+            >
+              <Plus size={18} />
+              {showForm ? 'Tutup Form' : 'Tambah Materi Baru'}
+            </button>
           </div>
         </div>
 
@@ -338,6 +375,35 @@ export default function AdminMateriPage() {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  Link Video YouTube <span className="font-normal text-slate-400">(Opsional)</span>
+                </label>
+                <input
+                  type="url"
+                  className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                />
+                {formData.videoUrl && !getYoutubeEmbedUrl(formData.videoUrl) && (
+                  <p className="mt-1.5 text-xs font-semibold text-red-600">
+                    Format link belum dikenali. Gunakan link youtube.com/watch?v=... atau youtu.be/...
+                  </p>
+                )}
+                {formData.videoUrl && getYoutubeEmbedUrl(formData.videoUrl) && (
+                  <div className="mt-3 aspect-video rounded-xl overflow-hidden border border-slate-200">
+                    <iframe
+                      src={getYoutubeEmbedUrl(formData.videoUrl)!}
+                      title="Pratinjau video"
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 flex justify-end">

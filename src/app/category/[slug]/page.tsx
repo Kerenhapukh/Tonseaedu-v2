@@ -18,6 +18,7 @@ interface Materi {
   id: number;
   title: string;
   content: string;
+  videoUrl?: string | null;
 }
 
 interface Category {
@@ -59,6 +60,13 @@ const markCategoryProgress = (username: string, kelas: string | null, slug: stri
     completedSlugs.push(slug);
     localStorage.setItem(key, JSON.stringify(completedSlugs));
   }
+};
+
+// Mengubah link YouTube biasa (watch?v=, youtu.be/, shorts/) menjadi URL embed
+const getYoutubeEmbedUrl = (url?: string | null) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
 
 export default function CategoryDetail() {
@@ -206,14 +214,29 @@ export default function CategoryDetail() {
             
             {category.materi && category.materi.length > 0 ? (
               <div className="grid gap-6">
-                {category.materi.map((m) => (
-                  <div key={m.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <h3 className="text-xl font-bold text-blue-900 mb-3">{m.title}</h3>
-                    <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                      {m.content}
+                {category.materi.map((m) => {
+                  const embedUrl = getYoutubeEmbedUrl(m.videoUrl);
+                  return (
+                    <div key={m.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                      <h3 className="text-xl font-bold text-blue-900 mb-3">{m.title}</h3>
+                      <div className="text-slate-700 leading-relaxed whitespace-pre-line">
+                        {m.content}
+                      </div>
+
+                      {embedUrl && (
+                        <div className="mt-5 aspect-video rounded-xl overflow-hidden border border-slate-200">
+                          <iframe
+                            src={embedUrl}
+                            title={m.title}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="bg-white p-8 rounded-3xl text-center border border-dashed border-slate-300">

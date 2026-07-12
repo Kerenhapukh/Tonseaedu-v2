@@ -41,7 +41,7 @@ model Materi {
   konten     String   @db.Text
   bab        String?
   ringkasan  String?  @db.Text
-  videoUrl   String?          // ← tambahan baru
+  videoUrl   String?
   kelas      String?
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int

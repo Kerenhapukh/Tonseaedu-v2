@@ -40,6 +40,7 @@ export async function GET(request: Request) {
       content: m.konten,
       bab: m.bab,
       ringkasan: m.ringkasan,
+      videoUrl: m.videoUrl,
     }));
 
     return NextResponse.json({ success: true, data: formattedMateri });
@@ -55,13 +56,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { judul, konten, categoryId, title, content, kelas, bab, ringkasan, summary, deskripsi } = body;
+    const { judul, konten, categoryId, title, content, kelas, bab, ringkasan, summary, deskripsi, videoUrl } = body;
     
     const finalJudul = judul || title;
     const finalKonten = konten || content;
     const finalRingkasan = ringkasan || summary || deskripsi || null;
     const finalBab = bab || null;
-    const finalCategoryId = categoryId ? Number(categoryId) : null;
+    const finalVideoUrl = videoUrl || null;
 
     if (!finalJudul || !finalKonten) {
       return NextResponse.json(
@@ -70,14 +71,31 @@ export async function POST(request: Request) {
       );
     }
 
+    let finalResolvedCategoryId = categoryId ? Number(categoryId) : null;
+    if (!finalResolvedCategoryId) {
+      const defaultCategory = await prisma.category.findFirst({
+        orderBy: { id: 'asc' },
+      });
+
+      if (!defaultCategory) {
+        return NextResponse.json(
+          { success: false, error: "Tidak ada kategori yang tersedia untuk materi." },
+          { status: 400 }
+        );
+      }
+
+      finalResolvedCategoryId = defaultCategory.id;
+    }
+
     const newMateri = await prisma.materi.create({
       data: {
         judul: finalJudul,
         konten: finalKonten,
         bab: finalBab,
         ringkasan: finalRingkasan,
-        categoryId: finalCategoryId,
+        categoryId: finalResolvedCategoryId,
         kelas: kelas || null,
+        videoUrl: finalVideoUrl,
       }
     });
 
