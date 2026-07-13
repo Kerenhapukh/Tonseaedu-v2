@@ -154,7 +154,7 @@ export default function RekapNilaiPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-600">
                         {/* Karena schema Score tidak memiliki relasi langsung ke Kategori Kuis, 
-                            kita berikan label default berdasarkan jumlah soal sementara */}
+                            kita berikan label default berdasarkan jumlah Kuis sementara */}
                         {score.totalQuestions > 0 ? "Umum" : "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">

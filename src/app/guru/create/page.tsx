@@ -47,8 +47,8 @@ export default function GuruCreateQuiz() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan soal');
-      alert('Soal berhasil dibuat');
+      if (!res.ok) throw new Error(data.error || 'Gagal menyimpan kuis');
+      alert('Kuis berhasil dibuat');
       // Reset
       setQuestion(''); setCorrectAnswer(''); setOptions(["", "", "", ""]);
     } catch (err: any) {
@@ -59,7 +59,7 @@ export default function GuruCreateQuiz() {
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-6">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Buat Soal Kuis</h1>
+        <h1 className="text-2xl font-bold mb-4">Buat Kuis</h1>
         <form onSubmit={submitQuestion} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Pilih Kategori / Materi</label>
@@ -96,7 +96,7 @@ export default function GuruCreateQuiz() {
           </div>
 
           <div className="flex justify-end">
-            <button type="submit" disabled={submitting} className="px-6 py-3 rounded-full bg-slate-900 text-white">{submitting ? 'Menyimpan...' : 'Simpan Soal'}</button>
+            <button type="submit" disabled={submitting} className="px-6 py-3 rounded-full bg-slate-900 text-white">{submitting ? 'Menyimpan...' : 'Simpan Kuis'}</button>
           </div>
         </form>
       </div>

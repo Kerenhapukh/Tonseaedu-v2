@@ -110,15 +110,10 @@ export default function UserMateriPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-blue-700">
-                <Sparkles size={14} />
-                Materi Otomatis Sesuai Kelas
               </div>
               <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">
                 Materi Pembelajaran {kelasLabel}
               </h1>
-              <p className="mt-3 text-slate-600 leading-7 max-w-2xl">
-                Materi ditampilkan per kelas agar siswa hanya melihat konten yang sesuai dengan levelnya.
-              </p>
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm min-w-[220px]">
@@ -135,14 +130,13 @@ export default function UserMateriPage() {
           <div className="bg-white p-12 rounded-[2rem] border border-dashed border-slate-300 text-center shadow-sm">
             <BookOpen size={52} className="mx-auto text-slate-300 mb-4" />
             <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Materi untuk {kelasLabel}</h3>
-            <p className="text-slate-500 max-w-xl mx-auto">
-              Materi untuk kelas ini belum tersedia. Jika guru menambahkan materi khusus kelas 7, 8, atau 9, konten akan otomatis muncul di sini.
-            </p>
           </div>
         ) : (
           <div className="space-y-6">
-            {KELAS_ORDER.map((kelasKey) => {
-              const items = groupedMateri[kelasKey] || [];
+            {KELAS_ORDER
+              .filter((kelasKey) => (groupedMateri[kelasKey] || []).length > 0)
+              .map((kelasKey) => {
+              const items = groupedMateri[kelasKey];
               const label = kelasKey === 'umum' ? 'Materi Umum' : `Kelas ${kelasKey}`;
 
               return (
@@ -158,44 +152,42 @@ export default function UserMateriPage() {
                   </div>
 
                   <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
-                    {items.length === 0 ? (
-                      <div className="col-span-full rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
-                        Belum ada materi untuk {label}.
-                      </div>
-                    ) : (
-                      items.map((materi) => (
-                        <article key={materi.id} className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl hover:border-blue-300 flex flex-col">
-                          <div className="h-36 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 p-6 flex items-center justify-center relative overflow-hidden">
+                    {items.map((materi) => (
+                      <Link key={materi.id} href={`/materi/${materi.id}`} className="group block overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-2xl hover:border-blue-300">
+                        <article className="flex flex-col">
+                          <div className="relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 p-6">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.32),_transparent_30%),radial-gradient(circle_at_bottom_left,_rgba(255,255,255,0.18),_transparent_30%)]" />
                             <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-white/30 bg-white/15 text-white shadow-lg backdrop-blur-sm">
                               <BookOpen size={34} />
                             </div>
                           </div>
 
-                          <div className="p-6 flex flex-1 flex-col">
-                            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                              <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                                {label}
-                              </span>
-                              <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                                {materi.bab || 'BAB belum diisi'}
-                              </span>
-                            </div>
+                          <div className="block p-6 text-left">
+                            <div className="flex flex-1 flex-col">
+                              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                                <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                                  {label}
+                                </span>
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                                  {materi.bab || 'BAB belum diisi'}
+                                </span>
+                              </div>
 
-                            <h3 className="text-xl font-black text-slate-900 line-clamp-2 leading-snug">{materi.title}</h3>
+                              <h3 className="text-xl font-black leading-snug text-slate-900 line-clamp-2">{materi.title}</h3>
 
-                            <p className="mt-4 text-slate-500 text-sm line-clamp-4 flex-1 leading-relaxed">
-                              {materi.ringkasan || materi.content}
-                            </p>
+                              <p className="mt-4 flex-1 text-sm leading-relaxed text-slate-500 line-clamp-4">
+                                {materi.ringkasan || materi.content}
+                              </p>
 
-                            <div className="mt-6 inline-flex items-center gap-2 font-bold text-blue-700">
-                              Lihat Materi
-                              <ChevronRight size={18} />
+                              <div className="mt-6 inline-flex items-center gap-2 font-bold text-blue-700">
+                                Lihat Materi
+                                <ChevronRight size={18} />
+                              </div>
                             </div>
                           </div>
                         </article>
-                      ))
-                    )}
+                      </Link>
+                    ))}
                   </div>
                 </section>
               );

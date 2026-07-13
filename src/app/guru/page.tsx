@@ -38,7 +38,7 @@ export default function GuruDashboard() {
         <header className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900">Dashboard Guru</h1>
-            <p className="text-slate-600">Kelola siswa, lihat hasil kuis, serta atur soal dan materi pembelajaran.</p>
+            <p className="text-slate-600">Kelola siswa, lihat hasil kuis, serta atur kuis dan materi pembelajaran.</p>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={handleLogout} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white">
@@ -72,8 +72,8 @@ export default function GuruDashboard() {
             <div className="flex items-center gap-3">
               <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600"><BookOpen /></div>
               <div>
-                <h3 className="text-xl font-bold">Kelola Soal</h3>
-                <p className="text-sm text-slate-500">Tambah, ubah, dan hapus soal yang digunakan di kuis siswa.</p>
+                <h3 className="text-xl font-bold">Kelola Kuis</h3>
+                <p className="text-sm text-slate-500">Tambah, ubah, dan hapus kuis yang digunakan di kuis siswa.</p>
               </div>
             </div>
           </Link>
@@ -83,7 +83,7 @@ export default function GuruDashboard() {
               <div className="bg-violet-50 p-3 rounded-xl text-violet-600"><BookOpen /></div>
               <div>
                 <h3 className="text-xl font-bold">Kelola Materi</h3>
-                <p className="text-sm text-slate-500">Atur materi pembelajaran yang menjadi acuan soal dan aktivitas belajar.</p>
+                <p className="text-sm text-slate-500">Atur materi pembelajaran yang menjadi acuan kuis dan aktivitas belajar.</p>
               </div>
             </div>
           </Link>

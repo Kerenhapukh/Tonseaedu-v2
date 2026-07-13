@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// Kita buat interface untuk tipe data soal agar TypeScript tenang
 interface Question {
   id: number;
   question: string;
@@ -23,14 +22,13 @@ export default function AdminQuestionsPage() {
   const [role, setRole] = useState('');
   const isGuru = role.toLowerCase() === 'guru';
 
-  // Mengambil data di Client Component
   const fetchQuestions = async () => {
     try {
-      const res = await fetch('/api/questions'); // Pastikan endpoint API ini sesuai
+      const res = await fetch('/api/questions');
       const data = await res.json();
       setQuestions(data);
     } catch (error) {
-      console.error("Gagal mengambil soal:", error);
+      console.error("Gagal mengambil kuis:", error);
     } finally {
       setLoading(false);
     }
@@ -49,7 +47,7 @@ export default function AdminQuestionsPage() {
   }, [router]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus soal ini?')) return;
+    if (!confirm('Yakin ingin menghapus kuis ini?')) return;
 
     try {
       const res = await fetch(`/api/questions/${id}`, { 
@@ -57,7 +55,7 @@ export default function AdminQuestionsPage() {
       });
 
       if (res.ok) {
-        // Menghapus soal dari tampilan tanpa refresh halaman
+       
         setQuestions(prev => prev.filter(q => q.id !== id));
       } else {
         const errorData = await res.json();
@@ -91,8 +89,8 @@ export default function AdminQuestionsPage() {
                   <BookOpen size={14} />
                   {isGuru ? "Guru / Pengelola Pembelajaran" : "Admin / Pengelola Sistem"}
                 </div>
-                <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Kelola Soal Tonsea</h1>
-                <p className="mt-3 max-w-2xl text-slate-600 leading-7">Total: {questions.length} soal tersedia</p>
+                <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Kelola Kuis Tonsea</h1>
+                <p className="mt-3 max-w-2xl text-slate-600 leading-7">Total: {questions.length} Kuis tersedia</p>
               </div>
             </div>
 
@@ -108,7 +106,7 @@ export default function AdminQuestionsPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:bg-slate-800 transition-all"
               >
                 <Plus size={16} />
-                Tambah Soal Baru
+                Tambah Kuis Baru
               </Link>
             </div>
           </div>
@@ -129,7 +127,7 @@ export default function AdminQuestionsPage() {
               <tbody className="bg-white divide-y divide-slate-200">
                 {questions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-14 text-center text-slate-400">Belum ada soal. Silakan tambah soal baru.</td>
+                    <td colSpan={5} className="px-6 py-14 text-center text-slate-400">Belum ada kuis. Silakan tambah kuis baru.</td>
                   </tr>
                 ) : (
                   questions.map((q) => (

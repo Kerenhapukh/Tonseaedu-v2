@@ -56,7 +56,7 @@ export default function NewQuestionPage() {
         router.push(isGuru ? "/guru" : "/admin/questions");
         router.refresh();
       } else {
-        alert("Gagal menyimpan soal");
+        alert("Gagal menyimpan kuis");
       }
     } catch (error) {
       console.error(error);
@@ -70,7 +70,7 @@ export default function NewQuestionPage() {
       <div className="max-w-2xl mx-auto">
         <div className="rounded-[2rem] border border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-6 md:p-8">
           <Link href={isGuru ? "/guru" : "/admin/questions"} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
-            <ArrowLeft size={16} /> {isGuru ? "Kembali ke Dashboard Guru" : "Kembali ke Daftar Soal"}
+            <ArrowLeft size={16} /> {isGuru ? "Kembali ke Dashboard Guru" : "Kembali ke Daftar Kuis"}
           </Link>
 
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -78,7 +78,7 @@ export default function NewQuestionPage() {
             {isGuru ? "Guru / Pengelola Pembelajaran" : "Admin / Pengelola Sistem"}
           </div>
 
-          <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Tambah Soal Tonsea</h1>
+          <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Tambah Kuis Tonsea</h1>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         {/* Kategori dan Kelas */}
@@ -167,7 +167,7 @@ export default function NewQuestionPage() {
               disabled={loading}
               className="w-full rounded-full bg-slate-900 text-white py-3.5 font-semibold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all disabled:bg-slate-300"
             >
-              {loading ? "Sedang Menyimpan..." : "Simpan Soal Sekarang"}
+              {loading ? "Sedang Menyimpan..." : "Simpan Kuis Sekarang"}
             </button>
           </form>
         </div>

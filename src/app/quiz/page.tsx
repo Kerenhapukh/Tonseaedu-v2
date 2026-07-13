@@ -184,9 +184,6 @@ export default function QuizPage() {
                   Kuis Mandiri Siswa
                 </div>
                 <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Kuis Bahasa Tonsea {kelasLabel}</h1>
-                <p className="mt-3 text-slate-600 leading-7 max-w-2xl">
-                  Soal kuis dimuat dari bank quiz tersendiri, terpisah dari kategori kosakata dan materi.
-                </p>
               </div>
 
               <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm min-w-[220px]">
@@ -199,7 +196,6 @@ export default function QuizPage() {
 
           <div className="text-center mb-2">
             <h2 className="text-2xl md:text-3xl font-black text-slate-800 mb-2 tracking-tight">Siap mulai kuis?</h2>
-            <p className="text-slate-600 font-medium">Bank soal ini berdiri sendiri dan tidak memakai kategori kosakata.</p>
           </div>
 
           <div className="flex justify-center">

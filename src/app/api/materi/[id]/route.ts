@@ -1,6 +1,37 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const materi = await prisma.materi.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        category: true,
+      },
+    });
+
+    if (!materi) {
+      return NextResponse.json({ error: 'Materi tidak ditemukan' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...materi,
+        title: materi.judul,
+        content: materi.konten,
+        bab: materi.bab,
+        ringkasan: materi.ringkasan,
+        videoUrl: materi.videoUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching materi:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await req.json();

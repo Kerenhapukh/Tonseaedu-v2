@@ -35,10 +35,10 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
 
     const fetchData = async () => {
       try {
-        // Ambil data kategori dan daftar soal secara paralel
+       
         const [catRes, questionRes] = await Promise.all([
           fetch("/api/categories"),
-          fetch("/api/questions") // Menggunakan endpoint GET yang sudah kita gabung tadi
+          fetch("/api/questions")  
         ]);
 
         const cats = await catRes.json();
@@ -46,19 +46,18 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
         
         setCategories(cats);
 
-        // Cari soal yang spesifik berdasarkan ID
         const currentQ = questions.find((q: any) => q.id === parseInt(id));
         
         if (currentQ) {
           setFormData({
             question: currentQ.question,
-            correct_answer: currentQ.correctAnswer, // Sesuaikan dengan schema baru camelCase
+            correct_answer: currentQ.correctAnswer, 
             options: currentQ.options,
             categoryId: currentQ.categoryId.toString(),
             kelas: currentQ.kelas || "",
           });
         } else {
-          alert("Soal tidak ditemukan!");
+          alert("Kuis tidak ditemukan!");
           router.push("/admin/questions");
         }
       } catch (error) {
@@ -85,7 +84,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
         router.push(isGuru ? "/guru" : "/admin/questions");
         router.refresh();
       } else {
-        alert("Gagal memperbarui soal");
+        alert("Gagal memperbarui kuis");
       }
     } catch (error) {
       console.error(error);
@@ -108,7 +107,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
       <div className="max-w-2xl mx-auto">
         <div className="rounded-[2rem] border border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-6 md:p-8">
           <Link href={isGuru ? "/guru" : "/admin/questions"} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mb-4">
-            <ArrowLeft size={16} /> {isGuru ? "Kembali ke Dashboard Guru" : "Kembali ke Daftar Soal"}
+            <ArrowLeft size={16} /> {isGuru ? "Kembali ke Dashboard Guru" : "Kembali ke Daftar Kuis"}
           </Link>
 
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
@@ -116,7 +115,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
             {isGuru ? "Guru / Pengelola Pembelajaran" : "Admin / Pengelola Sistem"}
           </div>
 
-          <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Edit Soal Tonsea</h1>
+          <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Edit Kuis Tonsea</h1>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         {/* Kategori dan Kelas */}
@@ -203,7 +202,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
               disabled={submitting}
               className="w-full rounded-full bg-slate-900 text-white py-3.5 font-semibold shadow-lg shadow-slate-900/10 hover:bg-slate-800 transition-all disabled:bg-slate-300"
             >
-              {submitting ? "Menyimpan Perubahan..." : "Update Soal"}
+              {submitting ? "Menyimpan Perubahan..." : "Update Kuis"}
             </button>
           </form>
         </div>
