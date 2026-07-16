@@ -20,6 +20,9 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Relasi progression
+  materiProgress MateriProgress[]
+
   @@map("users")
 }
 
@@ -43,10 +46,15 @@ model Materi {
   ringkasan  String?  @db.Text
   videoUrl   String?
   kelas      String?
+  sequence   Int      @default(0) // Urutan materi dalam satu kelas (0, 1, 2, ...)
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  // Relasi progression
+  progress  MateriProgress[]
+  questions Question[] // Soal khusus untuk materi ini (opsional)
 
   @@map("materi")
 }
@@ -73,9 +81,16 @@ model Question {
   kelas         String?  // Kelas: "7", "8", "9"
   category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId    Int
+
+  // BARU: kaitkan soal ke materi tertentu (opsional).
+  // Jika null, soal ini adalah soal umum berdasarkan kelas (perilaku lama tetap jalan).
+  materi     Materi? @relation(fields: [materiId], references: [id], onDelete: SetNull)
+  materiId   Int?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([materiId])
   @@map("questions")
 }
 
@@ -89,4 +104,26 @@ model Score {
 
   @@index([username])
   @@map("scores")
+}
+
+// Melacak progres siswa per materi (untuk quiz-gate / progression)
+model MateriProgress {
+  id       Int    @id @default(autoincrement())
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  materi   Materi @relation(fields: [materiId], references: [id], onDelete: Cascade)
+  materiId Int
+
+  // "completed" jika sudah lulus kuis materi ini.
+  // Materi terbuka bila: sequence 0, ATAU materi sebelumnya sudah "completed".
+  status      String    @default("locked")
+  quizScore   Int? // Nilai kuis terakhir (0-100)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, materiId])
+  @@index([userId])
+  @@map("materi_progress")
 }
