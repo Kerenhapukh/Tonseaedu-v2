@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle } from 'lucide-react';
+import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Materi {
@@ -34,6 +34,9 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/);
   return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
+
+const inputBaseClass =
+  "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[0.98rem] font-medium text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100";
 
 export default function AdminMateriPage() {
   const router = useRouter();
@@ -313,17 +316,25 @@ export default function AdminMateriPage() {
         </div>
 
         {showForm && (
-          <div className="bg-white p-6 rounded-[2rem] shadow-[0_20px_70px_rgba(15,23,42,0.08)] border border-slate-200 animate-in fade-in slide-in-from-top-4">
-            <div className="flex flex-col gap-2 mb-6">
-              <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Edit Materi' : 'Buat Materi Baru'}</h2>
-              <p className="text-sm text-slate-500">Isi data materi per kelas agar mudah dipisahkan saat ditampilkan ke siswa.</p>
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] lg:p-8 animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-slate-950">{isEditing ? 'Edit Materi' : 'Buat Materi Baru'}</h2>
+                <p className="text-sm text-slate-500">Isi data materi per kelas agar mudah dipisahkan saat ditampilkan ke siswa.</p>
+              </div>
             </div>
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Kelas</label>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                    <Layers size={14} className="text-slate-400" /> Kelas
+                  </label>
                   <select
-                    className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className={`${inputBaseClass} cursor-pointer`}
                     value={formData.kelas}
                     onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
                   >
@@ -335,10 +346,12 @@ export default function AdminMateriPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Bab</label>
+                  <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                    <BookOpen size={14} className="text-slate-400" /> Bab
+                  </label>
                   <input
                     type="text"
-                    className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className={inputBaseClass}
                     placeholder="Contoh: BAB 4"
                     value={formData.bab}
                     onChange={(e) => setFormData({ ...formData, bab: e.target.value })}
@@ -347,10 +360,12 @@ export default function AdminMateriPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Judul Materi</label>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                  <Type size={14} className="text-slate-400" /> Judul Materi
+                </label>
                 <input
                   type="text"
-                  className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={`${inputBaseClass} text-[1.05rem] font-semibold`}
                   placeholder="Contoh: Pengantar Sistem Komputer"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -358,9 +373,9 @@ export default function AdminMateriPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Deskripsi Singkat</label>
+                <label className="mb-1.5 block text-sm font-bold text-slate-700">Deskripsi Singkat</label>
                 <textarea
-                  className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[120px] transition-all"
+                  className={`${inputBaseClass} min-h-[110px] resize-y leading-relaxed`}
                   placeholder="Tuliskan ringkasan singkat materi di sini..."
                   value={formData.ringkasan}
                   onChange={(e) => setFormData({ ...formData, ringkasan: e.target.value })}
@@ -368,9 +383,9 @@ export default function AdminMateriPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Isi Materi</label>
+                <label className="mb-1.5 block text-sm font-bold text-slate-700">Isi Materi</label>
                 <textarea
-                  className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[170px] transition-all"
+                  className={`${inputBaseClass} min-h-[170px] resize-y leading-relaxed`}
                   placeholder="Tuliskan isi materi pelajaran di sini..."
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -378,12 +393,13 @@ export default function AdminMateriPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                  <Video size={14} className="text-slate-400" />
                   Link Video YouTube <span className="font-normal text-slate-400">(Opsional)</span>
                 </label>
                 <input
                   type="url"
-                  className="w-full p-3.5 border border-slate-200 rounded-2xl bg-slate-50/70 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  className={inputBaseClass}
                   placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx"
                   value={formData.videoUrl}
                   onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
@@ -394,7 +410,7 @@ export default function AdminMateriPage() {
                   </p>
                 )}
                 {formData.videoUrl && getYoutubeEmbedUrl(formData.videoUrl) && (
-                  <div className="mt-3 aspect-video rounded-xl overflow-hidden border border-slate-200">
+                  <div className="mt-3 aspect-video rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                     <iframe
                       src={getYoutubeEmbedUrl(formData.videoUrl)!}
                       title="Pratinjau video"
@@ -406,11 +422,20 @@ export default function AdminMateriPage() {
                 )}
               </div>
 
-              <div className="pt-2 flex justify-end">
+              <div className="flex justify-end gap-3 pt-2">
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                )}
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-slate-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-slate-800 transition-all disabled:opacity-50 shadow-lg shadow-slate-900/10"
+                  className="rounded-full bg-slate-900 px-6 py-3 font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? 'Menyimpan...' : isEditing ? 'Perbarui Materi' : 'Simpan Materi'}
                 </button>

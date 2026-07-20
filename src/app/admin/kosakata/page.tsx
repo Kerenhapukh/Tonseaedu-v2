@@ -191,14 +191,17 @@ export default function AdminKosakataPage() {
         {/* Form Tambah/Edit Kosakata */}
         {showForm && (
           <div className="bg-white p-6 rounded-[2rem] shadow-[0_20px_70px_rgba(15,23,42,0.08)] border border-slate-200 mb-8 animate-in fade-in slide-in-from-top-4">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">{isEditing ? "Edit Kosakata" : "Tambah Kosakata Baru"}</h2>
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-slate-800">{isEditing ? "Edit Kosakata" : "Tambah Kosakata Baru"}</h2>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Bahasa Tonsea</label>
                   <input 
                     type="text" 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[1.05rem] font-semibold text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 placeholder:text-slate-300"
                     placeholder="Contoh: Kuman"
                     value={formData.tonsea}
                     onChange={e => setFormData({...formData, tonsea: e.target.value})}
@@ -209,7 +212,7 @@ export default function AdminKosakataPage() {
                   <label className="block text-sm font-bold text-slate-700 mb-1">Bahasa Indonesia</label>
                   <input 
                     type="text" 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[1.05rem] font-semibold text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 placeholder:text-slate-300"
                     placeholder="Contoh: Makan"
                     value={formData.indonesia}
                     onChange={e => setFormData({...formData, indonesia: e.target.value})}
@@ -222,14 +225,13 @@ export default function AdminKosakataPage() {
                   <label className="block text-sm font-bold text-slate-700 mb-1">Kategori</label>
                   <input 
                     type="text" 
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-[1.02rem] font-semibold text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 placeholder:text-slate-300"
                     placeholder="Contoh: Hewan, Anggota Tubuh"
                     value={formData.categoryName}
                     onChange={e => setFormData({...formData, categoryName: e.target.value})}
                   />
                 </div>
 
-                {/* 2. UBAH DARI INPUT TEKS MENJADI INPUT FILE AUDIO */}
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">
                     {isEditing ? "Ganti File Audio (.mp3 - Opsional)" : "File Audio (.mp3 - Opsional)"}
@@ -237,7 +239,7 @@ export default function AdminKosakataPage() {
                   <input 
                     type="file" 
                     accept="audio/mp3, audio/mpeg" 
-                    className="w-full p-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 shadow-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
                     onChange={e => setAudioFile(e.target.files?.[0] || null)}
                   />
                 </div>
@@ -247,7 +249,7 @@ export default function AdminKosakataPage() {
                 <button 
                   type="submit" 
                   disabled={submitting}
-                  className="bg-slate-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-slate-800 transition-all disabled:opacity-50 shadow-lg shadow-slate-900/10"
+                  className="rounded-full bg-slate-900 px-6 py-3 font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? "Menyimpan..." : isEditing ? "Perbarui Kosakata" : "Simpan Kosakata"}
                 </button>

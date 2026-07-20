@@ -44,7 +44,7 @@ export default function KosakataPage() {
     }
   }, []);
 
-  const playAudio = (url: string | null) => {
+  const playAudio = (url: string | null | undefined) => {
     if (!url) return alert("Suara tidak tersedia untuk kosakata ini.");
     const audio = new Audio(url);
     audio.play().catch(e => console.error("Gagal memainkan suara:", e));
