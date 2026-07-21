@@ -28,19 +28,22 @@ async function main() {
     where: { categoryId: category.id }
   });
 
-  await prisma.materi.createMany({
-    data: [
-      {
-        judul: "Pengenalan Angka Dasar",
-        konten: "Dalam bahasa Tonsea, angka mirip dengan bahasa-bahasa di rumpun Minahasa lainnya. Contoh: Esa (1), Zua (2), Telu (3), Epat (4), Lima (5).",
-        categoryId: category.id,
-      },
-      {
-        judul: "Kata Kerja Sehari-hari",
-        konten: "Beberapa kata kerja dasar yang sering digunakan: Kuman (Makan), Tudu (Tidur), Mangeran (Berjalan).",
-        categoryId: category.id,
-      }
-    ]
+  const materiAngka = await prisma.materi.create({
+    data: {
+      judul: "Pengenalan Angka Dasar",
+      konten: "Dalam bahasa Tonsea, angka mirip dengan bahasa-bahasa di rumpun Minahasa lainnya. Contoh: Esa (1), Zua (2), Telu (3), Epat (4), Lima (5).",
+      categoryId: category.id,
+      sequence: 1,
+    }
+  });
+
+  const materiKerja = await prisma.materi.create({
+    data: {
+      judul: "Kata Kerja Sehari-hari",
+      konten: "Beberapa kata kerja dasar yang sering digunakan: Kuman (Makan), Tudu (Tidur), Mangeran (Berjalan).",
+      categoryId: category.id,
+      sequence: 2,
+    }
   });
 
   // ========== SEED KOSAKATA (Dengan Audio Placeholder) ==========
@@ -95,18 +98,21 @@ async function main() {
         correctAnswer: "Satu",
         options: ["Satu", "Dua", "Tiga", "Empat"],
         categoryId: category.id,
+        materiId: materiAngka.id,
       },
       {
         pertanyaan: "Kuman",
         correctAnswer: "Makan",
         options: ["Minum", "Makan", "Tidur", "Jalan"],
         categoryId: category.id,
+        materiId: materiKerja.id,
       },
       {
         pertanyaan: "Tudu",
         correctAnswer: "Tidur",
         options: ["Mandi", "Duduk", "Tidur", "Berdiri"],
         categoryId: category.id,
+        materiId: materiKerja.id,
       },
     ],
   });

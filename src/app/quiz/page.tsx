@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sparkles, Trophy, TimerReset, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sparkles, Trophy, TimerReset, ChevronRight, Gamepad2, Clock3 } from "lucide-react";
 
 interface QuizQuestion {
   id: number;
@@ -41,6 +41,41 @@ export default function QuizPage() {
 
     return localStorage.getItem("tonsea_user_kelas");
   });
+  const [stats, setStats] = useState({
+    totalQuizzes: 0,
+    bestScore: 0,
+    latestScore: 0,
+    totalQuestions: 0,
+    streak: 0,
+  });
+  const [materiList, setMateriList] = useState<{ id: number; judul: string; kelas?: string | null }[]>([]);
+  const [selectedMateriId, setSelectedMateriId] = useState<string>("");
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+  const handleMateriChange = async (materiIdStr: string) => {
+    setSelectedMateriId(materiIdStr);
+    if (!materiIdStr) {
+      setQuestions([]);
+      return;
+    }
+    
+    setLoadingQuestions(true);
+    try {
+      const res = await fetch(`/api/materi/${materiIdStr}/quiz`);
+      const data = await res.json();
+      const quizQuestions = (data.data || data) as QuizQuestion[];
+      const randomized = shuffle(quizQuestions).map((q) => ({
+        ...q,
+        options: shuffle(q.options || []),
+      }));
+      setQuestions(randomized);
+    } catch (error) {
+      console.error("Gagal memuat soal kuis materi:", error);
+      setQuestions([]);
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
   
   // State khusus Timer
   const SECONDS_PER_QUESTION = 15;
@@ -141,20 +176,23 @@ export default function QuizPage() {
       }
 
       try {
-        let url = '/api/quiz';
+        let materiUrl = '/api/materi';
         if (userKelas) {
-          url += `?kelas=${userKelas}`;
+          materiUrl += `?kelas=${userKelas}`;
         }
-        const res = await fetch(url);
-        const data = await res.json();
-        const quizQuestions = (data.data || data) as QuizQuestion[];
-        const randomized = shuffle(quizQuestions).map((q) => ({
-          ...q,
-          options: shuffle(q.options || []),
-        }));
-        setQuestions(randomized);
+        const materiRes = await fetch(materiUrl);
+        const materiJson = await materiRes.json();
+        setMateriList(materiJson.data || []);
+
+        if (savedUser) {
+          const scoreRes = await fetch(`/api/scores?username=${encodeURIComponent(savedUser)}`);
+          const scoreData = await scoreRes.json();
+          if (scoreData.data) {
+            setStats(scoreData.data);
+          }
+        }
       } catch (error) {
-        console.error("Gagal memuat soal quiz:", error);
+        console.error("Gagal memuat materi list atau stats kuis:", error);
       } finally {
         setLoading(false);
       }
@@ -164,33 +202,125 @@ export default function QuizPage() {
 
   if (loading) return <div className="flex justify-center items-center h-screen text-xl font-bold bg-slate-50 text-slate-500">Menyiapkan Kuis Tonsea...</div>;
 
-  if (questions.length === 0) return <div className="p-8 text-center text-slate-500 font-medium bg-slate-50 h-screen">Belum ada soal quiz yang tersedia.</div>;
+  // Jika sudah mulai tetapi soal kosong (misal materi terpilih tidak punya soal kuis)
+  if (isStarted && questions.length === 0) {
+    return (
+      <main className="min-h-screen bg-slate-50 py-20 px-4 text-center">
+        <div className="max-w-md mx-auto p-10 bg-white rounded-[2rem] shadow-xl border border-slate-200">
+          <p className="text-slate-500 mb-6 font-semibold">Materi ini belum memiliki soal kuis.</p>
+          <button 
+            onClick={() => setIsStarted(false)} 
+            className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl font-bold hover:bg-blue-700 transition-colors"
+          >
+            Kembali
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   // Jika belum mulai, tampilkan layar pembuka quiz yang berdiri sendiri
   if (!isStarted) {
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_30%),linear-gradient(to_bottom,_#f8fbff_0%,_#eef4ff_100%)] py-10 px-4 md:px-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <Link href="/dashboard" className="inline-flex items-center text-blue-700 font-semibold hover:text-blue-800 transition-colors">
+          <Link href="/materi" className="inline-flex items-center text-blue-700 font-semibold hover:text-blue-800 transition-colors">
             <ArrowLeft size={20} className="mr-2" />
-            Kembali ke Beranda
+            Kembali ke Daftar Materi
           </Link>
 
           <section className="rounded-[2rem] border border-blue-100 bg-white/90 backdrop-blur-xl shadow-[0_20px_70px_rgba(15,23,42,0.08)] p-6 md:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-3xl">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-xl">
                 <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-blue-700">
                   <Sparkles size={14} />
                   Kuis Mandiri Siswa
                 </div>
                 <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Kuis Bahasa Tonsea {kelasLabel}</h1>
+                
+                {/* Dropdown Pemilihan Materi */}
+                <div className="mt-6 max-w-md">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Pilih Materi Terlebih Dahulu</label>
+                  <select
+                    className="w-full p-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={selectedMateriId}
+                    onChange={(e) => handleMateriChange(e.target.value)}
+                  >
+                    <option value="">-- Pilih Materi Kuis --</option>
+                    {materiList.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.judul}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <p className="mt-3 text-sm text-slate-500 font-semibold">
+                    {selectedMateriId ? (
+                      loadingQuestions ? (
+                        <span className="flex items-center gap-2 text-blue-600">
+                          <span className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></span>
+                          Memuat soal kuis...
+                        </span>
+                      ) : (
+                        `${questions.length} soal kuis tersedia untuk materi ini`
+                      )
+                    ) : (
+                      "Silakan pilih materi untuk menampilkan kuis."
+                    )}
+                  </p>
+                </div>
               </div>
 
-              <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm min-w-[220px]">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Kelas aktif</p>
-                <p className="mt-2 text-2xl font-black text-slate-950">{kelasLabel}</p>
-                <p className="mt-1 text-sm text-slate-500">{questions.length} soal quiz tersedia</p>
-              </div>
+              {(() => {
+                const quizBestPercent = stats.totalQuestions > 0 
+                  ? Math.round((stats.bestScore / stats.totalQuestions) * 100) 
+                  : 0;
+
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:max-w-2xl w-full lg:w-auto">
+                    {/* Kuis dikerjakan */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm min-w-[240px]">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="rounded-xl bg-amber-50 p-2 text-amber-600">
+                            <Gamepad2 size={18} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500">Kuis dikerjakan</p>
+                            <h3 className="text-lg font-black text-slate-900">{stats.totalQuizzes}x</h3>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">Aktif</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Nilai terakhir {stats.latestScore}/{stats.totalQuestions || 0}</p>
+                      <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                        <Clock3 size={14} className="text-slate-400" />
+                        Streak belajar {stats.streak} hari
+                      </div>
+                    </div>
+
+                    {/* Skor terbaik */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm min-w-[240px]">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="rounded-xl bg-emerald-50 p-2 text-emerald-600">
+                            <Trophy size={18} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500">Skor terbaik</p>
+                            <h3 className="text-lg font-black text-slate-900">{stats.bestScore}/{stats.totalQuestions || 0}</h3>
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-600">{quizBestPercent}%</span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate" title="Rata-rata performa kuis siswa">Rata-rata performa kuis siswa.</p>
+                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" style={{ width: `${quizBestPercent}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </section>
 
@@ -201,7 +331,12 @@ export default function QuizPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setIsStarted(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-blue-700"
+              disabled={!selectedMateriId || loadingQuestions || questions.length === 0}
+              className={`inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all ${
+                !selectedMateriId || loadingQuestions || questions.length === 0
+                  ? "bg-slate-300 cursor-not-allowed opacity-60 shadow-none"
+                  : "bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 shadow-blue-200"
+              }`}
             >
               Mulai Kuis
               <ChevronRight size={18} />
@@ -234,7 +369,7 @@ export default function QuizPage() {
           >
             Main Lagi
           </button>
-          <Link href="/dashboard" className="block text-gray-400 hover:text-gray-600 text-sm">Kembali ke Beranda</Link>
+          <Link href="/materi" className="block text-gray-400 hover:text-gray-600 text-sm">Kembali ke Daftar Materi</Link>
         </div>
       </main>
     );

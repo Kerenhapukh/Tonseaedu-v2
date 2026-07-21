@@ -144,8 +144,8 @@ export default function CategoryDetail() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center p-8 bg-white rounded-2xl shadow-sm border border-slate-200 max-w-sm mx-auto">
           <p className="text-red-500 mb-4">{error}</p>
-          <Link href="/dashboard" className="text-blue-600 font-semibold hover:underline flex items-center justify-center">
-            <ArrowLeft size={18} className="mr-2" /> Kembali ke Beranda
+          <Link href="/materi" className="text-blue-600 font-semibold hover:underline flex items-center justify-center">
+            <ArrowLeft size={18} className="mr-2" /> Kembali ke Daftar Materi
           </Link>
         </div>
       </div>
@@ -162,9 +162,9 @@ export default function CategoryDetail() {
     <main className="min-h-screen bg-slate-50 p-6 md:p-12">
       <div className="max-w-4xl mx-auto">
         {/* Tombol Kembali */}
-        <Link href="/dashboard" className="group inline-flex items-center text-blue-600 mb-8 font-medium hover:text-blue-700 transition-colors">
+        <Link href="/materi" className="group inline-flex items-center text-blue-600 mb-8 font-medium hover:text-blue-700 transition-colors">
           <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" /> 
-          Kembali ke Beranda
+          Kembali ke Daftar Materi
         </Link>
 
         {/* Header Kategori */}

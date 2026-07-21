@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    
     const materi = await prisma.materi.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -59,20 +60,20 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const finalResolvedCategoryId = categoryId ? parseInt(categoryId) : existingMateri.categoryId;
 
-    const materi = await prisma.materi.update({
+    const updatedMateri = await prisma.materi.update({
       where: { id: parseInt(id) },
       data: {
-        judul: finalJudul, // title diganti menjadi judul di db
-        konten: finalKonten, // content diganti menjadi konten di db
+        judul: finalJudul, 
+        konten: finalKonten, 
         bab: finalBab,
         ringkasan: finalRingkasan,
         categoryId: finalResolvedCategoryId,
-        kelas: kelas || null,
+        kelas: kelas || null, 
         videoUrl: finalVideoUrl,
       },
     });
 
-    return NextResponse.json(materi);
+    return NextResponse.json(updatedMateri);
   } catch (error) {
     console.error('Error updating materi:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -82,11 +83,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    
     await prisma.materi.delete({
       where: { id: parseInt(id) },
     });
 
-    return NextResponse.json({ message: 'Materi berhasil dihapus' });
+    return NextResponse.json({ message: 'Materi berhasil dihapus' }, { status: 200 });
   } catch (error) {
     console.error('Error deleting materi:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

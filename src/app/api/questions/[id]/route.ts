@@ -6,11 +6,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Tunggu params selesai diproses (Next.js 15+)
+  
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    // 2. Langsung hapus soal (karena tidak ada relasi ke tabel Score)
+  
     await prisma.question.delete({
       where: { id },
     });
@@ -33,15 +33,17 @@ export async function PUT(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
     const body = await req.json();
-    const { question, correct_answer, options, categoryId, kelas } = body;
+    const { question, correct_answer, options, categoryId, kelas, materiId } = body;
 
     const updatedQuestion = await prisma.question.update({
       where: { id },
       data: {
-        pertanyaan: question, // diganti menjadi pertanyaan di db
+        pertanyaan: question, 
         correctAnswer: correct_answer,
         options,
         categoryId: parseInt(categoryId),
+        kelas: kelas || null,
+        materiId: materiId ? parseInt(materiId) : null,
       },
     });
 

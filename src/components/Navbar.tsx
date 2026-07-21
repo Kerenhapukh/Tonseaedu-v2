@@ -29,7 +29,6 @@ export default function Navbar() {
   };
 
   const menuItems = useMemo(() => [
-    { name: "Beranda", href: "/dashboard", icon: Home },
     { name: "Materi", href: "/materi", icon: BookOpen },
     { name: "Kosakata", href: "/kosakata", icon: Volume2 },
     { name: "Kuis", href: "/quiz", icon: PlayCircle },
@@ -42,7 +41,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="flex items-center gap-3">
+            <Link href="/materi" className="flex items-center gap-3">
               <div className="bg-blue-600 p-2 rounded-xl text-white">
                 <BookOpen size={24} strokeWidth={2.5} />
               </div>

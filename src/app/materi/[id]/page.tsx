@@ -44,7 +44,7 @@ interface ProgressItem {
   quizScore?: number | null;
 }
 
-const READ_TIMER_SECONDS = 300;
+const READ_TIMER_SECONDS = 10;
 const MAX_QUIZ_QUESTIONS = 5;
 const PASSING_SCORE = 70;
 
@@ -205,14 +205,12 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
 
   // Ambil soal kuis begitu timer baca selesai (dan belum pernah lulus)
   useEffect(() => {
-    if (!timerDone || alreadyCompleted || !materi || !nextMateri || quizQuestions.length > 0 || quizUnavailable || quizResult?.passed) return;
+    if (!timerDone || alreadyCompleted || !materi || quizQuestions.length > 0 || quizUnavailable || quizResult?.passed) return;
 
     const fetchQuiz = async () => {
       setQuizLoading(true);
       try {
-        const categoryId = materi.category?.id;
-        const kelasParam = materi.kelas || '';
-        const url = `/api/questions?categoryId=${categoryId ?? ''}&kelas=${encodeURIComponent(kelasParam)}`;
+        const url = `/api/materi/${materi.id}/quiz`;
         const res = await fetch(url);
         const json = await res.json();
         const list: QuizQuestion[] = Array.isArray(json?.data)
@@ -236,7 +234,7 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
     };
 
     fetchQuiz();
-  }, [timerDone, alreadyCompleted, materi, nextMateri, quizQuestions.length, quizUnavailable, quizResult]);
+  }, [timerDone, alreadyCompleted, materi, quizQuestions.length, quizUnavailable, quizResult]);
 
   const handleSelectAnswer = (questionId: number, option: string) => {
     if (submitted && quizResult?.passed) return;
@@ -378,8 +376,8 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
                 </section>
               ) : null}
 
-              {/* Gerbang Kuis - muncul kalau timer habis, ada materi berikutnya, belum lulus, dan bukan alreadyCompleted */}
-              {!alreadyCompleted && timerDone && nextMateri && !quizUnavailable && (
+              {/* Gerbang Kuis - muncul kalau timer habis, belum lulus, dan bukan alreadyCompleted */}
+              {!alreadyCompleted && timerDone && !quizUnavailable && (
                 <section className="rounded-[1.5rem] border border-indigo-200 bg-indigo-50/70 p-5 sm:p-6">
                   <div className="flex items-center justify-between gap-3 mb-5">
                     <div className="flex items-center gap-2">

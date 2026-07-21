@@ -33,7 +33,7 @@ function LoginContent() {
     }
 
     if (localStorage.getItem("tonsea_user")) {
-      router.replace("/dashboard");
+      router.replace("/materi");
     }
   }, [router, searchParams]);
 
@@ -64,7 +64,7 @@ function LoginContent() {
         if (data.user.kelas) {
           localStorage.setItem("tonsea_user_kelas", data.user.kelas);
         }
-        router.push("/dashboard");
+        router.push("/materi");
         return;
       }
 

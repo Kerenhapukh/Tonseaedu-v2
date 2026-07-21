@@ -30,7 +30,7 @@ export async function GET(request: Request) {
         category: true
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'asc'
       }
     });
 

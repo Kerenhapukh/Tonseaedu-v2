@@ -119,9 +119,9 @@ export default function UserMateriPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_30%),linear-gradient(to_bottom,_#f8fbff_0%,_#eef4ff_100%)] py-10 px-4 md:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        <Link href="/dashboard" className="group inline-flex items-center text-blue-700 font-semibold hover:text-blue-800 transition-colors">
+        <Link href="/" className="group inline-flex items-center text-blue-700 font-semibold hover:text-blue-800 transition-colors">
           <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-          Kembali ke Beranda
+          Kembali ke Halaman Utama
         </Link>
 
         <section className="rounded-[2rem] border border-blue-100 bg-white/90 backdrop-blur-xl shadow-[0_20px_70px_rgba(15,23,42,0.08)] p-6 md:p-8">
@@ -140,9 +140,8 @@ export default function UserMateriPage() {
             </div>
 
             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 shadow-sm min-w-[220px]">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Kelas aktif</p>
-              <p className="mt-2 text-2xl font-black text-slate-950">{kelasLabel}</p>
-              <p className="mt-1 text-sm text-slate-500">{materiList.length} materi tersedia</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Materi selesai</p>
+              <h3 className="text-2xl font-black text-slate-900">{completedIds.size} / {materiList.length}</h3>
             </div>
           </div>
         </section>

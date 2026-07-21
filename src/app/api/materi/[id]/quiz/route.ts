@@ -37,11 +37,14 @@ export async function GET(
 
     let source: 'materi' | 'kelas' = 'materi';
 
-    // 2) Fallback: soal umum berdasarkan kelas materi
+    // 2) Fallback: soal umum berdasarkan kelas dan kategori materi
     if (questions.length === 0) {
       source = 'kelas';
       const tingkatKelas = (materi.kelas || '').replace(/\D/g, '');
-      const whereClause: any = {};
+      const whereClause: any = {
+        categoryId: materi.categoryId,
+        materiId: null, // Hanya ambil soal kategori umum (bukan spesifik materi lain)
+      };
       if (tingkatKelas) {
         whereClause.OR = [
           { kelas: null },
@@ -57,7 +60,9 @@ export async function GET(
 
     const formatted = questions.map((q) => ({
       id: q.id,
+      pertanyaan: q.pertanyaan,
       question: q.pertanyaan,
+      correctAnswer: q.correctAnswer,
       correct_answer: q.correctAnswer,
       options: q.options,
       kelas: q.kelas,

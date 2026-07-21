@@ -26,7 +26,11 @@ export async function GET(req: NextRequest) {
 
     const questions = await prisma.question.findMany({
       where: whereClause,
-      include: { category: true },
+      // PERBAIKAN DI SINI: Menyandingkan category dan materi bersamaan
+      include: { 
+        category: true,
+        materi: true // Tambah materi: true agar nama materi ikut terambil untuk UI
+      },
       orderBy: { createdAt: 'desc' },
     });
     
@@ -45,15 +49,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { question, correct_answer, options, categoryId, kelas } = body;
+    // PERBAIKAN DI SINI: Ikut menangkap materiId dari request body
+    const { question, correct_answer, options, categoryId, kelas, materiId } = body;
 
     const newQuestion = await prisma.question.create({
       data: {
-        pertanyaan: question, // di db diganti jadi pertanyaan
+        pertanyaan: question, 
         correctAnswer: correct_answer,
         options,
         categoryId: parseInt(categoryId),
         kelas: kelas || null,
+        // PERBAIKAN DI SINI: Simpan nilai materiId ke database jika dikirim dari frontend
+        materiId: materiId ? parseInt(materiId) : null,
       },
     });
 

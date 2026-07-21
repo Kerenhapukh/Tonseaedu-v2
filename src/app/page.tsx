@@ -109,7 +109,7 @@ export default function LandingPage() {
         
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Link 
-            href="/dashboard" 
+            href="/materi" 
             className="w-full sm:w-auto px-8 py-4 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-all shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3 group"
           >
             Mulai Petualangan 

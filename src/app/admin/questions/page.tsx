@@ -13,6 +13,9 @@ interface Question {
   category?: {
     name: string;
   };
+  materi?: {
+    judul: string;
+  };
 }
 
 export default function AdminQuestionsPage() {
@@ -118,7 +121,7 @@ export default function AdminQuestionsPage() {
               <thead className="bg-slate-50">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Pertanyaan</th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Materi</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Kelas</th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jawaban Benar</th>
               <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>
@@ -137,8 +140,13 @@ export default function AdminQuestionsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                          {q.category?.name || 'Umum'}
+                          {q.materi?.judul || 'Umum'}
                         </span>
+                        {q.category && (
+                          <div className="text-xs text-slate-400 mt-1 max-w-[150px] truncate" title={q.category.name}>
+                            Kategori: {q.category.name}
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-2.5 py-1 text-xs font-medium bg-amber-50 text-amber-700 rounded-full">

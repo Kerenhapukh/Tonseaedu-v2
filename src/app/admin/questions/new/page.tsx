@@ -9,6 +9,7 @@ export default function NewQuestionPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [materiList, setMateriList] = useState<{ id: number; judul: string; categoryId: number; kelas?: string | null }[]>([]);
   const [role, setRole] = useState('');
   const isGuru = role.toLowerCase() === 'guru';
   
@@ -18,9 +19,10 @@ export default function NewQuestionPage() {
     options: ["", "", "", ""],
     categoryId: "",
     kelas: "",
+    materiId: "",
   });
 
-  // Ambil kategori dari database saat halaman dimuat
+  // Ambil kategori dan materi dari database saat halaman dimuat
   useEffect(() => {
     const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
     setRole(currentRole);
@@ -30,19 +32,30 @@ export default function NewQuestionPage() {
       return;
     }
 
-    const fetchCategories = async () => {
-      const res = await fetch("/api/categories");
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data);
+    const fetchCategoriesAndMateri = async () => {
+      try {
+        const [catRes, materiRes] = await Promise.all([
+          fetch("/api/categories"),
+          fetch("/api/materi"),
+        ]);
+        if (catRes.ok) {
+          const data = await catRes.json();
+          setCategories(data);
+        }
+        if (materiRes.ok) {
+          const resJson = await materiRes.json();
+          setMateriList(resJson.data || []);
+        }
+      } catch (error) {
+        console.error("Gagal memuat kategori atau materi:", error);
       }
     };
-    fetchCategories();
+    fetchCategoriesAndMateri();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.categoryId) return alert("Pilih kategori dulu!");
+    if (!formData.materiId) return alert("Pilih materi dulu!");
     
     setLoading(true);
     try {
@@ -65,6 +78,8 @@ export default function NewQuestionPage() {
     }
   };
 
+
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.08),_transparent_24%),linear-gradient(to_bottom,_#ffffff_0%,_#f8fafc_40%,_#f8fafc_100%)] px-4 py-6 md:px-8 md:py-8 text-slate-800">
       <div className="max-w-2xl mx-auto">
@@ -81,29 +96,38 @@ export default function NewQuestionPage() {
           <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Tambah Kuis Tonsea</h1>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        {/* Kategori dan Kelas */}
+        {/* Materi dan Kelas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700">Kategori</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Materi</label>
             <select
               required
               className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              value={formData.categoryId}
-              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              value={formData.materiId}
+              onChange={(e) => {
+                const selectedMateriId = e.target.value;
+                const selectedMateri = materiList.find(m => m.id === parseInt(selectedMateriId, 10));
+                setFormData({
+                  ...formData,
+                  materiId: selectedMateriId,
+                  categoryId: selectedMateri ? selectedMateri.categoryId.toString() : "",
+                  kelas: selectedMateri && selectedMateri.kelas ? selectedMateri.kelas : ""
+                });
+              }}
             >
-              <option value="">-- Pilih Kategori --</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <option value="">-- Pilih Materi --</option>
+              {materiList.map((m) => (
+                <option key={m.id} value={m.id}>{m.judul} (Kelas {m.kelas || 'Umum'})</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2 text-gray-700">Kelas (Opsional)</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700">Kelas (Otomatis dari Materi)</label>
             <select
-              className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-2.5 border rounded-lg bg-gray-50 text-gray-500 outline-none cursor-not-allowed"
               value={formData.kelas}
-              onChange={(e) => setFormData({ ...formData, kelas: e.target.value })}
+              disabled
             >
               <option value="">-- Berlaku untuk Semua --</option>
               <option value="7">Kelas 7</option>
