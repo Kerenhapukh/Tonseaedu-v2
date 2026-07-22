@@ -10,13 +10,30 @@ export async function GET(request: Request) {
     whereClause = { kelas };
   }
 
-  const rankings = await prisma.score.findMany({
+  const allScores = await prisma.score.findMany({
     where: whereClause,
-    orderBy: {
-      score: 'desc'
-    },
-    take: 10 // Ambil 10 besar saja
+    orderBy: [
+      { score: 'desc' },
+      { createdAt: 'desc' }
+    ]
   });
+
+  // Group by username so each student only appears ONCE with their highest score
+  const studentBestMap = new Map<string, typeof allScores[0]>();
+  for (const item of allScores) {
+    if (!studentBestMap.has(item.username)) {
+      studentBestMap.set(item.username, item);
+    } else {
+      const existing = studentBestMap.get(item.username)!;
+      if (item.score > existing.score) {
+        studentBestMap.set(item.username, item);
+      }
+    }
+  }
+
+  const uniqueRankings = Array.from(studentBestMap.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
 
   // Map to name field so frontend handles it easily, and default to Auth username
   const users = await prisma.user.findMany({
@@ -27,7 +44,7 @@ export async function GET(request: Request) {
     userMap[u.username] = u.namaLengkap;
   });
 
-  const formattedRankings = rankings.map(r => ({
+  const formattedRankings = uniqueRankings.map(r => ({
     ...r,
     name: userMap[r.username] || r.username,
   }));

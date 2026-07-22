@@ -175,16 +175,20 @@ export default function AdminKosakataPage() {
               </p>
             </div>
 
-            <button 
-              onClick={resetForm}
-              className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 ${
-                showForm 
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none" 
-                  : "bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800"
-              }`}
-            >
-              {showForm ? "Batal" : <><Plus size={18} /> Tambah Kosakata</>}
-            </button>
+            {!showForm && (
+              <button 
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditId(null);
+                  setFormData({ tonsea: '', indonesia: '', categoryName: '' });
+                  setAudioFile(null);
+                  setShowForm(true);
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-semibold shadow-lg transition-all hover:-translate-y-0.5 bg-slate-900 text-white shadow-slate-900/10 hover:bg-slate-800"
+              >
+                <Plus size={18} /> Tambah Kosakata
+              </button>
+            )}
           </div>
         </div>
 
@@ -245,7 +249,20 @@ export default function AdminKosakataPage() {
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end">
+              <div className="pt-2 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setIsEditing(false);
+                    setEditId(null);
+                    setFormData({ tonsea: '', indonesia: '', categoryName: '' });
+                    setAudioFile(null);
+                  }}
+                  className="rounded-full bg-slate-100 px-6 py-3 font-semibold text-slate-700 hover:bg-slate-200 transition-all"
+                >
+                  Batal
+                </button>
                 <button 
                   type="submit" 
                   disabled={submitting}

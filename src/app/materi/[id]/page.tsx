@@ -44,7 +44,7 @@ interface ProgressItem {
   quizScore?: number | null;
 }
 
-const READ_TIMER_SECONDS = 10;
+const READ_TIMER_SECONDS = 120;
 const MAX_QUIZ_QUESTIONS = 5;
 const PASSING_SCORE = 70;
 
@@ -286,60 +286,74 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
   const canProceedToNext = !nextMateri || alreadyCompleted || (submitted && quizResult?.passed) || quizUnavailable;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_30%),linear-gradient(to_bottom,_#f8fbff_0%,_#eef4ff_100%)] py-10 px-4 md:px-8">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] py-8 px-4 md:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
-        <Link href="/materi" className="group inline-flex items-center text-blue-700 font-semibold hover:text-blue-800 transition-colors">
-          <ArrowLeft size={20} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+        <Link 
+          href="/materi" 
+          className="group inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md px-4 py-2 text-sm font-bold text-slate-700 shadow-sm border border-slate-200/80 hover:bg-white hover:text-blue-600 transition-all hover:shadow-md hover:-translate-x-0.5"
+        >
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform text-slate-500 group-hover:text-blue-600" />
           Kembali ke Daftar Materi
         </Link>
 
         {loading ? (
-          <div className="rounded-[2rem] border border-blue-100 bg-white/90 p-10 text-center shadow-[0_20px_70px_rgba(15,23,42,0.08)]">
-            Memuat materi...
+          <div className="flex flex-col items-center justify-center py-20 rounded-[2.5rem] border border-slate-200 bg-white/80 backdrop-blur-md shadow-sm">
+            <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-4" />
+            <p className="text-slate-500 font-bold text-sm">Memuat materi pembelajaran...</p>
           </div>
         ) : error ? (
-          <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-center text-red-700 shadow-sm">
+          <div className="rounded-[2rem] border border-red-200 bg-red-50 p-8 text-center text-red-700 shadow-sm font-semibold">
             {error}
           </div>
         ) : materi ? (
-          <article className="overflow-hidden rounded-[2rem] border border-blue-100 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.10)] backdrop-blur-xl">
-            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 px-6 py-8 md:px-10 md:py-12 text-white">
-              <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.22em] text-white/80">
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 backdrop-blur-sm">
-                  <BookOpen size={14} />
-                  Materi Lengkap
-                </span>
-                {materi.bab ? <span className="rounded-full bg-white/15 px-3 py-1 backdrop-blur-sm">{materi.bab}</span> : null}
-                {materi.category?.name ? <span className="rounded-full bg-white/15 px-3 py-1 backdrop-blur-sm">{materi.category.name}</span> : null}
-                {alreadyCompleted && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/25 px-3 py-1 backdrop-blur-sm">
-                    <CheckCircle2 size={13} /> Sudah Lulus
+          <article className="overflow-hidden rounded-[2.5rem] border border-slate-200/90 bg-white/95 shadow-[0_20px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            {/* Header Banner */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 px-8 py-10 md:px-12 md:py-14 text-white">
+              <div className="absolute top-0 right-0 -mr-16 -mt-16 h-80 w-80 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/10 blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 space-y-4">
+                <div className="flex flex-wrap items-center gap-2.5 text-xs font-extrabold uppercase tracking-wider text-white/90">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-md border border-white/20">
+                    <BookOpen size={14} className="text-blue-300" />
+                    Modul Pembelajaran
                   </span>
-                )}
-              </div>
+                  {materi.bab ? <span className="rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-md border border-white/20">{materi.bab}</span> : null}
+                  {materi.category?.name ? <span className="rounded-full bg-white/15 px-3.5 py-1.5 backdrop-blur-md border border-white/20">{materi.category.name}</span> : null}
+                  {alreadyCompleted && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/30 px-3.5 py-1.5 backdrop-blur-md border border-emerald-300/40 text-emerald-200">
+                      <CheckCircle2 size={14} /> Sudah Lulus
+                    </span>
+                  )}
+                </div>
 
-              <h1 className="mt-5 text-3xl font-black tracking-tight leading-tight md:text-5xl">
-                {materi.title}
-              </h1>
+                <h1 className="text-3xl font-black tracking-tight leading-tight md:text-5xl text-white">
+                  {materi.title}
+                </h1>
 
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/85">
-                <span className="inline-flex items-center gap-2">
-                  <CalendarDays size={16} />
-                  {formatKelasLabel(materi.kelas)}
-                </span>
+                <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-blue-200/90 pt-2">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-black/20 px-3 py-1 border border-white/10">
+                    <CalendarDays size={14} />
+                    {formatKelasLabel(materi.kelas)}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-8 px-4 py-6 sm:px-6 md:px-10 md:py-10">
+            <div className="space-y-8 px-6 py-8 sm:px-8 md:px-12 md:py-10">
 
               {/* Timer baca - hanya kalau belum pernah lulus */}
               {!alreadyCompleted && !timerDone && (
-                <div className="flex items-center gap-3 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4">
-                  <Clock3 size={20} className="shrink-0 text-amber-600" />
-                  <p className="text-sm font-semibold text-amber-800">
-                    Baca dulu materinya ya. Kuisnya bisa dikerjakan dalam{' '}
-                    <span className="tabular-nums">{secondsLeft}</span> detik.
-                  </p>
+                <div className="flex items-center gap-4 rounded-2xl border border-amber-300/60 bg-amber-500/10 p-5 backdrop-blur-sm">
+                  <div className="p-3 bg-amber-500 text-white rounded-xl shadow-md shrink-0">
+                    <Clock3 size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-800">Waktu Membaca Wajib</p>
+                    <p className="text-sm font-semibold text-amber-900 mt-0.5">
+                      Silakan baca materi dengan teliti. Kuis gerbang dapat diakses dalam{' '}
+                      <span className="inline-flex px-2 py-0.5 rounded-lg bg-amber-200 text-amber-900 font-mono font-bold text-base shadow-inner">{secondsLeft}</span> detik.
+                    </p>
+                  </div>
                 </div>
               )}
 
