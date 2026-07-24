@@ -104,11 +104,23 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.24),_transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 relative overflow-hidden">
+      {/* Gambar Background Foto Halaman Login */}
+      <img 
+        src="/images/login-bg.jpg" 
+        alt="Latar Belakang Login TonseaEdu" 
+        className="absolute inset-0 w-full h-full object-cover object-center opacity-40 pointer-events-none scale-105 animate-[pulse_10s_infinite]"
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = 'none';
+        }}
+      />
 
-      <div className="max-w-md w-full grid grid-cols-1 rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
+      {/* Overlay Gradients & Glow */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/90 via-slate-950/60 to-slate-950/80 z-[1]" />
+      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
+      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
+
+      <div className="max-w-md w-full grid grid-cols-1 rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.4)] relative z-10">
         
 
         <div className="p-7 sm:p-10">

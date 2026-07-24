@@ -10,20 +10,32 @@ export default function Navbar() {
   const router = useRouter();
   
   const [username, setUsername] = useState<string | null>(null);
+  const [userKelas, setUserKelas] = useState<string | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("tonsea_user");
+    const savedKelas = localStorage.getItem("tonsea_user_kelas");
+
     if (savedUser) setUsername(savedUser);
+    if (savedKelas) {
+      const normalized = savedKelas.replace(/\D/g, "");
+      setUserKelas(normalized ? `Kelas ${normalized}` : savedKelas);
+    } else {
+      setUserKelas(null);
+    }
     setIsProfileOpen(false);
   }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("tonsea_user");
     localStorage.removeItem("tonsea_user_role");
+    localStorage.removeItem("tonsea_user_name");
+    localStorage.removeItem("tonsea_user_kelas");
     localStorage.removeItem("tonsea_admin");
     localStorage.removeItem("tonsea_admin_role");
     setUsername(null);
+    setUserKelas(null);
     setIsProfileOpen(false);
     router.replace("/");
   };
@@ -81,12 +93,19 @@ export default function Navbar() {
             {username ? (
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)} 
-                className="flex items-center gap-3 bg-white hover:bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 shadow-sm transition-all hover:shadow"
+                className="flex items-center gap-2.5 bg-white hover:bg-slate-50 p-1.5 pr-4 rounded-full border border-slate-200 shadow-sm transition-all hover:shadow"
               >
                 <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white shadow-sm font-black text-sm">
                   {username.charAt(0).toUpperCase()}
                 </div>
-                <span className="text-xs font-extrabold text-slate-800">{username}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold text-slate-800">{username}</span>
+                  {userKelas && (
+                    <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full">
+                      {userKelas}
+                    </span>
+                  )}
+                </div>
               </button>
             ) : (
               <Link 
@@ -98,10 +117,17 @@ export default function Navbar() {
             )}
             
             {isProfileOpen && (
-              <div className="absolute right-0 top-full mt-3 w-52 bg-white/95 backdrop-blur-xl shadow-2xl border border-slate-200 rounded-3xl p-2 z-[60] animate-in fade-in slide-in-from-top-2">
-                <div className="px-4 py-3 border-b border-slate-100">
+              <div className="absolute right-0 top-full mt-3 w-56 bg-white/95 backdrop-blur-xl shadow-2xl border border-slate-200 rounded-3xl p-2 z-[60] animate-in fade-in slide-in-from-top-2">
+                <div className="px-4 py-3 border-b border-slate-100 space-y-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tersambung Sebagai</p>
-                  <p className="text-sm font-black text-slate-900 truncate">{username}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-black text-slate-900 truncate">{username}</p>
+                    {userKelas && (
+                      <span className="text-[10px] font-black uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 shrink-0">
+                        {userKelas}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button 
                   onClick={handleLogout} 

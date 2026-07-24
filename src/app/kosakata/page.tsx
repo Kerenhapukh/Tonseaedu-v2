@@ -121,11 +121,14 @@ export default function KosakataPage() {
               className="w-full py-3 px-4 bg-slate-50 border border-slate-200 rounded-full text-sm font-extrabold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white cursor-pointer transition-all"
             >
               <option value="">Semua Kategori ({categories.length})</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              {categories.map((cat) => {
+                const count = kosakata.filter((item) => item.category?.name === cat).length;
+                return (
+                  <option key={cat} value={cat}>
+                    {cat} ({count})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
