@@ -8,19 +8,17 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  namaLengkap String
-  username    String   @unique
-  email       String?
-  namaSekolah String?
-  nomorTelepon String?
-  password    String
-  role        String   @default("user") // "admin" (Guru) atau "user" (Siswa)
-  kelas       String? // Contoh: "7A", "7B", "8A", "9B"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relasi progression
+  id             Int              @id @default(autoincrement())
+  namaLengkap    String
+  username       String           @unique
+  password       String
+  role           String           @default("user")
+  kelas          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  email          String?
+  namaSekolah    String?
+  nomorTelepon   String?
   materiProgress MateriProgress[]
 
   @@map("users")
@@ -31,30 +29,28 @@ model Category {
   name        String
   slug        String     @unique
   description String?
-  materi      Materi[]
   kosakata    Kosakata[]
+  materi      Materi[]
   questions   Question[]
 
   @@map("categories")
 }
 
 model Materi {
-  id         Int      @id @default(autoincrement())
+  id         Int              @id @default(autoincrement())
   judul      String
-  konten     String   @db.Text
-  bab        String?
-  ringkasan  String?  @db.Text
-  videoUrl   String?
-  kelas      String?
-  sequence   Int      @default(0) // Urutan materi dalam satu kelas (0, 1, 2, ...)
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  konten     String
   categoryId Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relasi progression
-  progress  MateriProgress[]
-  questions Question[] // Soal khusus untuk materi ini (opsional)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  kelas      String?
+  bab        String?
+  ringkasan  String?
+  videoUrl   String?
+  sequence   Int              @default(0)
+  category   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  progress   MateriProgress[]
+  questions  Question[]
 
   @@map("materi")
 }
@@ -64,11 +60,11 @@ model Kosakata {
   tonsea     String
   indonesia  String
   audioUrl   String?
-  kelas      String?  // Kelas: "7", "8", "9"
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  kelas      String?
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@map("kosakata")
 }
@@ -78,17 +74,13 @@ model Question {
   pertanyaan    String
   correctAnswer String
   options       String[]
-  kelas         String?  // Kelas: "7", "8", "9"
-  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   categoryId    Int
-
-  // BARU: kaitkan soal ke materi tertentu (opsional).
-  // Jika null, soal ini adalah soal umum berdasarkan kelas (perilaku lama tetap jalan).
-  materi     Materi? @relation(fields: [materiId], references: [id], onDelete: SetNull)
-  materiId   Int?
-
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  kelas         String?
+  materiId      Int?
+  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  materi        Materi?  @relation(fields: [materiId], references: [id])
 
   @@index([materiId])
   @@map("questions")
@@ -97,7 +89,7 @@ model Question {
 model Score {
   id             Int      @id @default(autoincrement())
   username       String
-  kelas          String? // Kelas siswa saat mengerjakan kuis
+  kelas          String?
   score          Int
   totalQuestions Int
   createdAt      DateTime @default(now())
@@ -106,22 +98,17 @@ model Score {
   @@map("scores")
 }
 
-// Melacak progres siswa per materi (untuk quiz-gate / progression)
 model MateriProgress {
-  id       Int    @id @default(autoincrement())
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId   Int
-  materi   Materi @relation(fields: [materiId], references: [id], onDelete: Cascade)
-  materiId Int
-
-  // "completed" jika sudah lulus kuis materi ini.
-  // Materi terbuka bila: sequence 0, ATAU materi sebelumnya sudah "completed".
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  materiId    Int
   status      String    @default("locked")
-  quizScore   Int? // Nilai kuis terakhir (0-100)
+  quizScore   Int?
   completedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  materi      Materi    @relation(fields: [materiId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, materiId])
   @@index([userId])

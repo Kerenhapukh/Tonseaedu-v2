@@ -47,7 +47,17 @@ export async function POST(req: Request) {
         role: user.role,
       },
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Terjadi kesalahan pada server" }, { status: 500 });
+  } catch (error: any) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        message: error.message,
+        stack: error.stack
+      },
+      {
+        status: 500
+      }
+    );
   }
 }
