@@ -24,18 +24,39 @@ export default function LeaderboardPage() {
       return;
     }
 
+    const savedUser = localStorage.getItem('tonsea_user');
     const userKelas = localStorage.getItem('tonsea_user_kelas');
-    if (userKelas) {
-      const normalized = userKelas.replace(/\D/g, '');
-      if (normalized) {
-        setIsSiswa(true);
-        setFilterKelas(normalized);
-        setSiswaKelasLabel(`Kelas ${normalized}`);
-        return;
-      }
-    }
 
-    setIsSiswa(false);
+    if (savedUser) {
+      setIsSiswa(true);
+      if (userKelas) {
+        const normalized = userKelas.replace(/\D/g, '');
+        if (normalized) {
+          setFilterKelas(normalized);
+          setSiswaKelasLabel(`Kelas ${normalized}`);
+          return;
+        }
+      }
+
+      // Ambil data user jika kelas belum ada di localStorage
+      api.get('/admin/users')
+        .then(res => {
+          if (Array.isArray(res.data)) {
+            const current = res.data.find((u: any) => u.username === savedUser);
+            if (current && current.kelas) {
+              const normalized = String(current.kelas).replace(/\D/g, '');
+              if (normalized) {
+                localStorage.setItem('tonsea_user_kelas', current.kelas);
+                setFilterKelas(normalized);
+                setSiswaKelasLabel(`Kelas ${normalized}`);
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    } else {
+      setIsSiswa(false);
+    }
   }, []);
 
   useEffect(() => {

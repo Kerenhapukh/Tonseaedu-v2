@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, Mail, Phone, School, User, Lock } from "lucide-react";
+import { GraduationCap, Mail, Phone, School, User, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterGuruPage() {
   const router = useRouter();
@@ -16,6 +16,8 @@ export default function RegisterGuruPage() {
     konfirmasiPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showKonfirmasiPassword, setShowKonfirmasiPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +73,7 @@ export default function RegisterGuruPage() {
 
           <form onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Nama Lengkap</label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Nama Lengkap</label>
               <div className="relative">
                 <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -79,14 +81,14 @@ export default function RegisterGuruPage() {
                   type="text"
                   value={formData.namaLengkap}
                   onChange={(e) => setFormData({ ...formData, namaLengkap: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-4 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="Nama lengkap guru"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Email</label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -94,14 +96,14 @@ export default function RegisterGuruPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-4 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="nama@email.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Nama Sekolah</label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Nama Sekolah</label>
               <div className="relative">
                 <School size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -109,53 +111,67 @@ export default function RegisterGuruPage() {
                   type="text"
                   value={formData.namaSekolah}
                   onChange={(e) => setFormData({ ...formData, namaSekolah: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-4 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="Nama sekolah"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Nomor Telepon <span className="font-normal normal-case tracking-normal">(opsional)</span></label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Nomor Telepon <span className="font-normal normal-case tracking-normal">(opsional)</span></label>
               <div className="relative">
                 <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={formData.nomorTelepon}
                   onChange={(e) => setFormData({ ...formData, nomorTelepon: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-4 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="08xxxx"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Password</label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   required
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-11 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="Password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest ml-1 mb-2">Konfirmasi Password</label>
+              <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-widest ml-1 mb-2">Konfirmasi Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   required
-                  type="password"
+                  type={showKonfirmasiPassword ? "text" : "password"}
                   value={formData.konfirmasiPassword}
                   onChange={(e) => setFormData({ ...formData, konfirmasiPassword: e.target.value })}
-                  className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50 pl-11 pr-4 py-4 outline-none transition-colors focus:border-blue-500 focus:bg-white"
+                  className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-11 pr-11 py-4 text-slate-950 font-bold placeholder:text-slate-400 outline-none transition-colors focus:border-blue-600 focus:bg-white"
                   placeholder="Ulangi password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowKonfirmasiPassword(!showKonfirmasiPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 focus:outline-none"
+                >
+                  {showKonfirmasiPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

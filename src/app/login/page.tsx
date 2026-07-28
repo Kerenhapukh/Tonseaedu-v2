@@ -182,7 +182,7 @@ function LoginContent() {
                       ? "Masukkan email guru..."
                       : "Masukkan email atau username admin..."
                 }
-                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all text-slate-950 font-bold placeholder:text-slate-400"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
               />
@@ -197,7 +197,7 @@ function LoginContent() {
                   type={showPassword ? "text" : "password"}
                   required
                   placeholder={role === "siswa" ? "Masukkan kata sandi siswa..." : "Masukkan kata sandi akun..."}
-                  className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white outline-none transition-all text-slate-700 font-medium placeholder:text-slate-400"
+                  className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all text-slate-950 font-bold placeholder:text-slate-400"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -205,7 +205,7 @@ function LoginContent() {
                   type="button"
                   onClick={() => setShowPassword((s) => !s)}
                   aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
