@@ -120,49 +120,47 @@ function LoginContent() {
       <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
       <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
 
-      <div className="max-w-md w-full grid grid-cols-1 rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.4)] relative z-10">
-        
-
-        <div className="p-7 sm:p-10">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="bg-blue-600 w-14 h-14 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <GraduationCap size={30} className="text-white" />
+      <div className="max-w-md w-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.4)] relative z-10 my-6">
+        <div className="p-5 sm:p-10">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="bg-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+              <GraduationCap size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-950 tracking-tight">TonseaEdu</h1>
-              {/* Deskripsi singkat mobile dihilangkan sesuai permintaan */}
+              <h1 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">TonseaEdu</h1>
+              <p className="text-slate-500 text-xs sm:text-sm font-semibold">Masuk ke platform pembelajaran</p>
             </div>
           </div>
 
-          <div className="mb-8 grid grid-cols-3 rounded-[1.4rem] bg-slate-100 p-1.5">
+          <div className="mb-6 grid grid-cols-3 rounded-2xl bg-slate-100 p-1 gap-1">
             <button
               type="button"
               onClick={() => setRole("admin")}
-              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "admin" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <ShieldCheck size={16} />
+              <ShieldCheck size={15} />
               Admin
             </button>
             <button
               type="button"
               onClick={() => setRole("guru")}
-              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "guru" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <UserRound size={16} />
+              <UserRound size={15} />
               Guru
             </button>
             <button
               type="button"
               onClick={() => setRole("siswa")}
-              className={`flex items-center justify-center gap-2 rounded-[1rem] py-3 text-sm font-bold transition-all ${
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "siswa" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <User size={16} />
+              <User size={15} />
               Siswa
             </button>
           </div>

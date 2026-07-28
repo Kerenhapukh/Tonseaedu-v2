@@ -85,7 +85,7 @@ export default function LandingPage() {
   </header>
 
   {/* Hero Section */}
-  <section id="beranda" className="relative flex-1 flex flex-col justify-center py-20 lg:py-32 px-6 overflow-hidden bg-slate-950 w-full text-white">
+  <section id="beranda" className="relative flex-1 flex flex-col justify-center py-14 sm:py-20 lg:py-32 px-4 sm:px-6 overflow-hidden bg-slate-950 w-full text-white">
     {/* Gambar Background Animasi Anak-Anak Belajar Bahasa Tonsea */}
     <img 
       src="/images/hero-kids-bg.jpg" 
@@ -102,14 +102,14 @@ export default function LandingPage() {
     <div className="absolute left-0 right-0 top-0 z-[2] m-auto h-[310px] w-[310px] rounded-full bg-blue-500 opacity-30 blur-[100px]"></div>
     <div className="absolute bottom-0 right-10 z-[2] h-[350px] w-[350px] rounded-full bg-cyan-400 opacity-20 blur-[120px]"></div>
     
-    <div className="max-w-7xl mx-auto relative z-10 w-full grid lg:grid-cols-2 gap-12 items-center">
+    <div className="max-w-7xl mx-auto relative z-10 w-full grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
       <div className="text-center lg:text-left flex flex-col items-center lg:items-start">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 border border-blue-400/30 text-cyan-300 font-bold mb-6 shadow-lg backdrop-blur-md">
           <Sparkles size={16} className="text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
-          <span className="text-sm tracking-wide">Platform Pembelajaran SMP</span>
+          <span className="text-xs sm:text-sm tracking-wide">Platform Pembelajaran SMP</span>
         </div>
         
-        <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1] drop-shadow-lg">
+        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1] drop-shadow-lg">
           Lestarikan <br className="hidden lg:block"/>
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">Bahasa Tonsea</span>
         </h2>
@@ -201,7 +201,7 @@ export default function LandingPage() {
   </section>
 
   {/* Tentang Section */}
-  <section id="tentang" className="py-24 px-6 bg-slate-950 text-white w-full border-t border-slate-800/80 relative overflow-hidden">
+  <section id="tentang" className="py-14 sm:py-24 px-4 sm:px-6 bg-slate-950 text-white w-full border-t border-slate-800/80 relative overflow-hidden">
     {/* Gambar Background Khusus Section Tentang */}
     <img 
       src="/images/tentang-bg.jpg" 
@@ -307,7 +307,7 @@ export default function LandingPage() {
   </section>
 
   {/* Fitur Section */}
-  <section id="fitur" className="relative py-24 px-6 w-full overflow-hidden bg-slate-950 text-white border-t border-slate-800">
+  <section id="fitur" className="relative py-14 sm:py-24 px-4 sm:px-6 w-full overflow-hidden bg-slate-950 text-white border-t border-slate-800">
     {/* Gambar Background Khusus Section Fitur */}
     <img 
       src="/images/fitur-bg.jpg" 

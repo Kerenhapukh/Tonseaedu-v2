@@ -54,16 +54,16 @@ export default function RegisterGuruPage() {
       <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[520px] h-[520px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
       <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[520px] h-[520px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
 
-     <div className="w-full max-w-xl rounded-[2rem] overflow-hidden border border-white/10 bg-white/95 shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10">
+     <div className="w-full max-w-xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10 my-6">
 
-        <div className="p-7 sm:p-10">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="bg-blue-600 w-14 h-14 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <GraduationCap size={30} className="text-white" />
+        <div className="p-5 sm:p-10">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="bg-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+              <GraduationCap size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-950 tracking-tight">Registrasi Guru</h1>
-              <p className="text-slate-500 text-sm">Lengkapi data untuk membuat akun</p>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Registrasi Guru</h1>
+              <p className="text-slate-500 text-xs sm:text-sm font-semibold">Lengkapi data untuk membuat akun guru</p>
             </div>
           </div>
 
