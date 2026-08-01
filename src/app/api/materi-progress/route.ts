@@ -1,6 +1,7 @@
 // File tujuan: src/app/api/materi-progress/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
 
 /**
  * GET /api/materi-progress?username=xxx
@@ -44,12 +45,18 @@ const PASSING_SCORE = 70;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { username, materiId, quizScore } = body;
+    const session = await auth();
+    if (!session?.user?.username) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!username || materiId === undefined || quizScore === undefined) {
+    const body = await request.json();
+    const { materiId, quizScore } = body;
+    const username = session.user.username;
+
+    if (materiId === undefined || quizScore === undefined) {
       return NextResponse.json(
-        { error: 'username, materiId, dan quizScore diperlukan' },
+        { error: 'materiId dan quizScore diperlukan' },
         { status: 400 }
       );
     }

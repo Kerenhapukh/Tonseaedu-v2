@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; 
+import prisma from '@/lib/prisma';
+import { auth } from '@/auth';
 
 export async function GET(request: Request) {
   try {
@@ -72,15 +73,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await auth();
+    if (!session?.user?.username) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { username, score, totalQuestions, total_questions, kelas } = body;
-    
+    const { score, totalQuestions, total_questions, kelas } = body;
+
     // Support both old and new payload formats
     const finalTotalQuestions = totalQuestions ?? total_questions ?? 0;
 
     const newScore = await prisma.score.create({
       data: {
-        username: username || "Anonim",
+        username: session.user.username,
         score: Number(score),
         totalQuestions: Number(finalTotalQuestions),
         kelas: kelas || null,
