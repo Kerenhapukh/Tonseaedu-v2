@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { uploadAudioFile, deleteAudioFile } from '@/lib/audioStorage';
 import { requireRole } from '@/lib/apiAuth';
 
 // --- FUNGSI DELETE (HAPUS KOSAKATA + AUDIO NYA) ---
@@ -16,14 +15,11 @@ export async function DELETE(
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
-    // Cari data kosakata terlebih dahulu untuk mengecek apakah ada file audio lokal
+    // Cari data kosakata terlebih dahulu untuk mengecek apakah ada file audio di storage
     const kosakata = await prisma.kosakata.findUnique({ where: { id } });
 
-    // Jika ada file audio di folder public, hapus file fisiknya
-    if (kosakata?.audioUrl && kosakata.audioUrl.startsWith('/uploads/')) {
-      const filePath = path.join(process.cwd(), 'public', kosakata.audioUrl);
-      await fs.unlink(filePath).catch(() => console.log("File fisik audio tidak ditemukan, abaikan."));
-    }
+    // Jika ada file audio di Supabase Storage, hapus file nya
+    await deleteAudioFile(kosakata?.audioUrl).catch(() => console.log("File audio di storage tidak ditemukan, abaikan."));
 
     // Hapus data dari database PostgreSQL
     await prisma.kosakata.delete({
@@ -66,28 +62,14 @@ export async function PUT(
     }
 
     const oldKosakata = await prisma.kosakata.findUnique({ where: { id } });
-    let finalAudioUrl = oldKosakata?.audioUrl; 
+    let finalAudioUrl = oldKosakata?.audioUrl;
 
     if (audioFile && audioFile.size > 0) {
       try {
-        const bytes = await audioFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        const fileName = `${Date.now()}_${audioFile.name.replace(/\s+/g, '_')}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'audio');
-        
-        await fs.mkdir(uploadDir, { recursive: true });
-        const fullPath = path.join(uploadDir, fileName);
-        await fs.writeFile(fullPath, buffer);
-
-        if (oldKosakata?.audioUrl && oldKosakata.audioUrl.startsWith('/uploads/')) {
-          const oldFilePath = path.join(process.cwd(), 'public', oldKosakata.audioUrl);
-          await fs.unlink(oldFilePath).catch(() => {});
-        }
-
-        finalAudioUrl = `/uploads/audio/${fileName}`;
-      } catch (fsError: any) {
-        console.warn("Gagal menyimpan file audio baru:", fsError?.message);
+        finalAudioUrl = await uploadAudioFile(audioFile);
+        await deleteAudioFile(oldKosakata?.audioUrl).catch(() => {});
+      } catch (uploadError: any) {
+        console.warn("Gagal mengunggah file audio baru ke Supabase Storage:", uploadError?.message);
       }
     }
 

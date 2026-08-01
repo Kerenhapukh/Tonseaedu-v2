@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { promises as fs } from 'fs';
-import path from 'path';
+import { uploadAudioFile } from '@/lib/audioStorage';
 import { requireRole } from '@/lib/apiAuth';
 
 export async function GET(request: Request) {
@@ -54,23 +53,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Data kata Bahasa Tonsea, Bahasa Indonesia, dan Kategori wajib diisi" }, { status: 400 });
     }
 
-    let finalAudioUrl = null;
+    let finalAudioUrl: string | null = null;
 
-    // PROSES PENYIMPANAN FILE AUDIO KE FOLDER PUBLIC
+    // UNGGAH FILE AUDIO KE SUPABASE STORAGE
     if (audioFile && audioFile.size > 0) {
       try {
-        const bytes = await audioFile.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const fileName = `${Date.now()}_${audioFile.name.replace(/\s+/g, '_')}`;
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'audio');
-        
-        await fs.mkdir(uploadDir, { recursive: true });
-        const fullPath = path.join(uploadDir, fileName);
-        await fs.writeFile(fullPath, buffer);
-
-        finalAudioUrl = `/uploads/audio/${fileName}`;
-      } catch (fsError: any) {
-        console.warn("Gagal menyimpan berkas audio fisik:", fsError?.message);
+        finalAudioUrl = await uploadAudioFile(audioFile);
+      } catch (uploadError: any) {
+        console.warn("Gagal mengunggah berkas audio ke Supabase Storage:", uploadError?.message);
       }
     }
 
