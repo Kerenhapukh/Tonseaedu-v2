@@ -45,7 +45,9 @@ function LoginContent() {
         return;
       }
 
-      router.push(role === "siswa" ? "/materi" : role === "guru" ? "/guru" : "/admin");
+      // Hard navigation: memastikan halaman tujuan mengambil session yang baru
+      // dari server, bukan cache useSession() lama sebelum login.
+      window.location.href = role === "siswa" ? "/materi" : role === "guru" ? "/guru" : "/admin";
     } catch (error: any) {
       alert(error.message || "Terjadi kesalahan.");
     } finally {
