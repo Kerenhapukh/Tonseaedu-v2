@@ -4,11 +4,12 @@ import bcrypt from "bcryptjs";
 import { requireRole } from "@/lib/apiAuth";
 
 export async function GET() {
-  const { response } = await requireRole(["admin"]);
+  const { session, response } = await requireRole(["admin", "guru"]);
   if (response) return response;
 
   try {
     const users = await prisma.user.findMany({
+      where: session!.user.role === "guru" ? { role: "siswa" } : undefined,
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(
@@ -26,7 +27,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const { response } = await requireRole(["admin"]);
+  const { session, response } = await requireRole(["admin", "guru"]);
   if (response) return response;
 
   try {
@@ -36,6 +37,10 @@ export async function POST(req: Request) {
     const loginIdentifier = (email || username || "").trim().toLowerCase();
     const normalizedRole = String(role || "guru").toLowerCase();
     const normalizedKelas = typeof kelas === "string" ? kelas.trim() : "";
+
+    if (session!.user.role === "guru" && normalizedRole !== "siswa") {
+      return NextResponse.json({ error: "Guru hanya dapat menambahkan akun siswa" }, { status: 403 });
+    }
 
     if (!loginIdentifier || !password || !displayName) {
       return NextResponse.json({ error: "Email/username, nama lengkap, dan password wajib diisi" }, { status: 400 });

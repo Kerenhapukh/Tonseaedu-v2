@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/apiAuth";
 
 // Use context parameter type for Next.js App Router API routes
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { response } = await requireRole(["admin"]);
+  const { session, response } = await requireRole(["admin", "guru"]);
   if (response) return response;
 
   try {
@@ -16,6 +16,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (session!.user.role === "guru" && user.role !== "siswa") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { password: _password, ...safeUser } = user;
@@ -32,17 +36,34 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { response } = await requireRole(["admin"]);
+  const { session, response } = await requireRole(["admin", "guru"]);
   if (response) return response;
 
   try {
     const resolvedParams = await params;
+    const targetId = Number(resolvedParams.id);
+    const isGuru = session!.user.role === "guru";
+
+    if (isGuru) {
+      const existing = await prisma.user.findUnique({ where: { id: targetId } });
+      if (!existing) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      if (existing.role !== "siswa") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     const body = await req.json();
     const { username, email, password, name, namaLengkap, namaSekolah, nomorTelepon, role, kelas } = body;
     const displayName = name || namaLengkap;
     const loginIdentifier = (email || username || "").trim().toLowerCase();
     const normalizedRole = typeof role === "string" ? role.toLowerCase() : undefined;
     const normalizedKelas = typeof kelas === "string" ? kelas.trim() : "";
+
+    if (isGuru && normalizedRole && normalizedRole !== "siswa") {
+      return NextResponse.json({ error: "Guru hanya dapat mengelola akun siswa" }, { status: 403 });
+    }
 
     if (normalizedRole === "siswa" && !normalizedKelas) {
       return NextResponse.json({ error: "Kelas wajib diisi untuk siswa" }, { status: 400 });
@@ -76,7 +97,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const user = await prisma.user.update({
-      where: { id: Number(resolvedParams.id) },
+      where: { id: targetId },
       data,
     });
 
@@ -94,13 +115,25 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { response } = await requireRole(["admin"]);
+  const { session, response } = await requireRole(["admin", "guru"]);
   if (response) return response;
 
   try {
     const resolvedParams = await params;
+    const targetId = Number(resolvedParams.id);
+
+    if (session!.user.role === "guru") {
+      const existing = await prisma.user.findUnique({ where: { id: targetId } });
+      if (!existing) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      if (existing.role !== "siswa") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     await prisma.user.delete({
-      where: { id: Number(resolvedParams.id) },
+      where: { id: targetId },
     });
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
