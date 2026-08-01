@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireRole } from "@/lib/apiAuth";
 
 export async function GET() {
+  const { response } = await requireRole(["admin"]);
+  if (response) return response;
+
   try {
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(
-      users.map((user) => ({
+      users.map(({ password: _password, ...user }) => ({
         ...user,
         name: user.namaLengkap,
         email: user.email || user.username,
@@ -22,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const { response } = await requireRole(["admin"]);
+  if (response) return response;
+
   try {
     const body = await req.json();
     const { username, email, password, name, namaLengkap, namaSekolah, nomorTelepon, role, kelas } = body;
@@ -66,8 +73,9 @@ export async function POST(req: Request) {
       },
     });
 
+    const { password: _password, ...safeUser } = user;
     return NextResponse.json({
-      ...user,
+      ...safeUser,
       name: user.namaLengkap,
       email: user.email || user.username,
       namaSekolah: user.namaSekolah,

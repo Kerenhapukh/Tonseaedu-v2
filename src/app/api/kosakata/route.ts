@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { requireRole } from '@/lib/apiAuth';
 
 export async function GET(request: Request) {
   try {
@@ -35,6 +36,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const formData = await request.formData();
     

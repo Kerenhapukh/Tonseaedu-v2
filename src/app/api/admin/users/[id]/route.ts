@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireRole } from "@/lib/apiAuth";
 
 // Use context parameter type for Next.js App Router API routes
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireRole(["admin"]);
+  if (response) return response;
+
   try {
     const resolvedParams = await params;
     const user = await prisma.user.findUnique({
@@ -14,8 +18,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    const { password: _password, ...safeUser } = user;
     return NextResponse.json({
-      ...user,
+      ...safeUser,
       name: user.namaLengkap,
       email: user.email || user.username,
       namaSekolah: user.namaSekolah,
@@ -27,6 +32,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireRole(["admin"]);
+  if (response) return response;
+
   try {
     const resolvedParams = await params;
     const body = await req.json();
@@ -72,8 +80,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       data,
     });
 
+    const { password: _password, ...safeUser } = user;
     return NextResponse.json({
-      ...user,
+      ...safeUser,
       name: user.namaLengkap,
       email: user.email || user.username,
       namaSekolah: user.namaSekolah,
@@ -85,6 +94,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireRole(["admin"]);
+  if (response) return response;
+
   try {
     const resolvedParams = await params;
     await prisma.user.delete({

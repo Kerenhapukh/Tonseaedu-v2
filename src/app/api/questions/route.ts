@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
 
 // 1. Fungsi untuk MENGAMBIL soal (GET)
 export async function GET(req: NextRequest) {
@@ -47,6 +48,9 @@ export async function GET(req: NextRequest) {
 
 // 2. Fungsi untuk MENAMBAH soal (POST)
 export async function POST(req: Request) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const body = await req.json();
     // PERBAIKAN DI SINI: Ikut menangkap materiId dari request body

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
 
 export async function GET() {
+  const { response } = await requireRole(['admin']);
+  if (response) return response;
+
   try {
     const totalQuestions = await prisma.question.count();
     const totalMateri = await prisma.materi.count();

@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
-  
+
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);
 
@@ -29,6 +33,9 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const resolvedParams = await params;
     const id = parseInt(resolvedParams.id);

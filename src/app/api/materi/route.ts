@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
 
 export async function GET(request: Request) {
   try {
@@ -54,6 +55,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const body = await request.json();
     const { judul, konten, categoryId, title, content, kelas, bab, ringkasan, summary, deskripsi, videoUrl } = body;

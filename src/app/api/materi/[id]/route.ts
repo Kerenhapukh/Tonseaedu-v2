@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,6 +35,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const body = await req.json();
     const { title, content, categoryId, kelas, judul, konten, bab, ringkasan, summary, deskripsi, videoUrl } = body;
@@ -81,9 +85,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
   try {
     const { id } = await params;
-    
+
     await prisma.materi.delete({
       where: { id: parseInt(id) },
     });
