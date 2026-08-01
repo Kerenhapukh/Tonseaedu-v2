@@ -4,32 +4,20 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, BookOpen, FileText, LogOut, ShieldCheck, Users } from "lucide-react";
-
-async function logoutAll() {
-  await fetch('/api/admin/auth/logout', { method: 'POST' }).catch(() => null);
-  localStorage.removeItem('tonsea_admin');
-  localStorage.removeItem('tonsea_admin_role');
-  localStorage.removeItem('tonsea_user');
-  localStorage.removeItem('tonsea_user_role');
-  localStorage.removeItem('tonsea_user_name');
-  localStorage.removeItem('tonsea_user_kelas');
-}
+import { useSession, signOut } from "next-auth/react";
 
 export default function GuruDashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const isGuru = status === "authenticated" && session?.user?.role === "guru";
 
   useEffect(() => {
-    const role = localStorage.getItem('tonsea_admin_role') || '';
-    const isAdmin = !!localStorage.getItem('tonsea_admin');
-    if (!isAdmin || role.toLowerCase() !== 'guru') {
-      router.replace('/login');
-      return;
-    }
-  }, [router]);
+    if (status === "loading") return;
+    if (!isGuru) router.replace("/login");
+  }, [status, isGuru, router]);
 
-  const handleLogout = async () => {
-    await logoutAll();
-    router.replace('/');
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/" });
   };
 
   return (

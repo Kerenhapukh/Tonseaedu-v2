@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GraduationCap, ShieldCheck, User, UserRound, Eye, EyeOff } from "lucide-react";
+import { useSession, signIn } from "next-auth/react";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "guru" | "siswa">("siswa");
@@ -18,81 +20,32 @@ function LoginContent() {
     if (initialRole === "admin" || initialRole === "guru" || initialRole === "siswa") {
       setRole(initialRole);
     }
+  }, [searchParams]);
 
-    const savedAdminRole = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
-    if (localStorage.getItem("tonsea_admin")) {
-      if (savedAdminRole === "guru") {
-        router.replace("/guru");
-        return;
-      }
-
-      if (savedAdminRole === "admin") {
-        router.replace("/admin");
-        return;
-      }
-    }
-
-    if (localStorage.getItem("tonsea_user")) {
-      router.replace("/materi");
-    }
-  }, [router, searchParams]);
+  useEffect(() => {
+    if (status !== "authenticated" || !session?.user?.role) return;
+    const currentRole = session.user.role;
+    router.replace(currentRole === "admin" ? "/admin" : currentRole === "guru" ? "/guru" : "/materi");
+  }, [status, session, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (role === "siswa") {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: identifier.trim(), password }),
-        });
+      const result = await signIn("credentials", {
+        identifier: identifier.trim(),
+        password,
+        role,
+        redirect: false,
+      });
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Username / Password salah!");
-        }
-
-        localStorage.removeItem("tonsea_admin");
-        localStorage.removeItem("tonsea_admin_role");
-        localStorage.setItem("tonsea_user", data.user.username);
-        localStorage.setItem("tonsea_user_role", data.user.role || "siswa");
-        if (data.user.name) {
-          localStorage.setItem("tonsea_user_name", data.user.name);
-        }
-        if (data.user.kelas) {
-          localStorage.setItem("tonsea_user_kelas", data.user.kelas);
-        }
-        router.push("/materi");
+      if (result?.error) {
+        alert(result.code || "Terjadi kesalahan.");
         return;
       }
 
-      const res = await fetch("/api/admin/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          password,
-          role,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || `Email / kata sandi ${role} salah!`);
-      }
-
-      localStorage.removeItem("tonsea_user");
-      localStorage.removeItem("tonsea_user_role");
-      localStorage.removeItem("tonsea_user_name");
-      localStorage.removeItem("tonsea_user_kelas");
-      localStorage.setItem("tonsea_admin", data.user.username || identifier.trim());
-      localStorage.setItem("tonsea_admin_role", data.user.role || role);
-      if (data.user.namaLengkap) {
-        localStorage.setItem("tonsea_user_name", data.user.namaLengkap);
-      }
-      router.push(data.user.role === "guru" ? "/guru" : "/admin");
+      router.push(role === "siswa" ? "/materi" : role === "guru" ? "/guru" : "/admin");
     } catch (error: any) {
       alert(error.message || "Terjadi kesalahan.");
     } finally {

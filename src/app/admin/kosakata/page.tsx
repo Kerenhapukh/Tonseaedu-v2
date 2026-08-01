@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Volume2, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Category {
   id: number;
@@ -21,6 +22,7 @@ interface Kosakata {
 
 export default function AdminKosakataPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [kosakataList, setKosakataList] = useState<Kosakata[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -49,14 +51,15 @@ export default function AdminKosakataPage() {
   };
 
   useEffect(() => {
-    const role = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    if (!localStorage.getItem('tonsea_admin') || role !== 'admin') {
+    if (status === 'loading') return;
+    if (session?.user?.role !== 'admin') {
       router.replace('/login');
       return;
     }
 
     fetchData();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

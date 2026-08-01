@@ -4,13 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function NewQuestionPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [materiList, setMateriList] = useState<{ id: number; judul: string; categoryId: number; kelas?: string | null }[]>([]);
-  const [role, setRole] = useState('');
+  const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
   
   const [formData, setFormData] = useState({
@@ -24,9 +26,8 @@ export default function NewQuestionPage() {
 
   // Ambil kategori dan materi dari database saat halaman dimuat
   useEffect(() => {
-    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    setRole(currentRole);
-    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
     if (!isPrivileged) {
       router.replace('/login');
       return;
@@ -51,7 +52,8 @@ export default function NewQuestionPage() {
       }
     };
     fetchCategoriesAndMateri();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, role, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

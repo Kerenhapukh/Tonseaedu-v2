@@ -1,29 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 
 export default function StudentShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const { data: session, status } = useSession();
+  const ready = status === "authenticated" && session?.user?.role === "siswa";
 
   useEffect(() => {
-    const adminRole = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
-
-    if (localStorage.getItem("tonsea_admin")) {
-      router.replace(adminRole === "guru" ? "/guru" : "/admin");
-      return;
-    }
-
-    const userRole = (localStorage.getItem("tonsea_user_role") || "siswa").toLowerCase();
-    if (!localStorage.getItem("tonsea_user") || userRole !== "siswa") {
-      router.replace("/login?role=siswa");
-      return;
-    }
-
-    setReady(true);
-  }, [router]);
+    if (status === "loading") return;
+    if (!ready) router.replace("/login?role=siswa");
+  }, [status, ready, router]);
 
   if (!ready) {
     return (

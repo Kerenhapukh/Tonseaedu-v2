@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function GuruCreateQuiz() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [categories, setCategories] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
   const [correctAnswer, setCorrectAnswer] = useState("");
@@ -14,9 +16,8 @@ export default function GuruCreateQuiz() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const role = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    const isAllowed = !!localStorage.getItem('tonsea_admin') && role === 'guru';
-    if (!isAllowed) {
+    if (status === 'loading') return;
+    if (session?.user?.role !== 'guru') {
       router.replace('/login');
       return;
     }
@@ -25,7 +26,8 @@ export default function GuruCreateQuiz() {
       .then(res => res.json())
       .then(data => setCategories(Array.isArray(data) ? data : data.data || []))
       .catch(() => setCategories([]));
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, router]);
 
   const submitQuestion = async (e: React.FormEvent) => {
     e.preventDefault();

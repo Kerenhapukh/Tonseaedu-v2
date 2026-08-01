@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import api from '@/lib/api';
 import { ArrowLeft, Volume2, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 // 1. Definisikan Interface
 interface Kosakata {
@@ -27,11 +28,6 @@ interface Category {
   description: string;
   kosakata: Kosakata[];
   materi: Materi[];
-}
-
-interface UserKelasResult {
-  username?: string;
-  kelas?: string | null;
 }
 
 const getProgressKey = (username: string, kelas: string | null) => {
@@ -72,6 +68,9 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
 export default function CategoryDetail() {
   const params = useParams();
   const slug = params.slug;
+  const { data: session } = useSession();
+  const username = session?.user?.username ?? null;
+  const userKelas = session?.user?.kelas ?? null;
 
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -79,54 +78,29 @@ export default function CategoryDetail() {
   const [activeTab, setActiveTab] = useState<'materi' | 'kosakata'>('materi');
 
   useEffect(() => {
-    if (slug) {
-      const fetchCategoryWithKelas = async (kelasFilter: string | null, currentUser: string | null, currentKelas: string | null) => {
-        let url = `/categories/${slug}`;
-        if (kelasFilter) {
-          url += `?kelas=${kelasFilter}`;
-        }
-        
-        api.get(url)
-          .then(res => {
-            console.log("Response API:", res.data);
-            const data = res.data.data || res.data;
-            setCategory(data);
-            if (data?.materi?.length > 0 && currentUser) {
-              markCategoryProgress(currentUser, currentKelas, String(slug));
-            }
-            setLoading(false);
-          })
-          .catch(err => {
-            console.error("Gagal mengambil detail kategori:", err);
-            setError("Kosakata tidak ditemukan atau server bermasalah.");
-            setLoading(false);
-          });
-      };
+    if (!slug) return;
 
-      const initData = async () => {
-        const savedUser = localStorage.getItem("tonsea_user");
-        let userKelas = localStorage.getItem("tonsea_user_kelas");
-
-        if (!userKelas && savedUser) {
-          try {
-            const res = await fetch('/api/admin/users');
-            const users = (await res.json()) as UserKelasResult[];
-            const currentUser = users.find((u) => u.username === savedUser);
-            if (currentUser && currentUser.kelas) {
-              userKelas = currentUser.kelas;
-              localStorage.setItem("tonsea_user_kelas", currentUser.kelas as string);
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        
-        fetchCategoryWithKelas(userKelas, savedUser, userKelas);
-      };
-
-      initData();
+    let url = `/categories/${slug}`;
+    if (userKelas) {
+      url += `?kelas=${userKelas}`;
     }
-  }, [slug]);
+
+    api.get(url)
+      .then(res => {
+        console.log("Response API:", res.data);
+        const data = res.data.data || res.data;
+        setCategory(data);
+        if (data?.materi?.length > 0 && username) {
+          markCategoryProgress(username, userKelas, String(slug));
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Gagal mengambil detail kategori:", err);
+        setError("Kosakata tidak ditemukan atau server bermasalah.");
+        setLoading(false);
+      });
+  }, [slug, username, userKelas]);
 
   if (loading) {
     return (

@@ -4,12 +4,14 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BookOpen } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 export default function EditQuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const resolvedParams = use(params);
   const id = resolvedParams.id;
-  const [role, setRole] = useState('');
+  const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
   const [loading, setLoading] = useState(true);
@@ -27,9 +29,8 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
   });
 
   useEffect(() => {
-    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    setRole(currentRole);
-    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
     if (!isPrivileged) {
       router.replace('/login');
       return;
@@ -72,7 +73,8 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
       }
     };
     fetchData();
-  }, [id, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, role, id, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

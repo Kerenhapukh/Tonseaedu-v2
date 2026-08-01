@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, ChevronRight, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface QuizQuestion {
   id: number;
@@ -27,6 +28,9 @@ const shuffle = <T,>(array: T[]): T[] => {
 export default function MateriQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
+  const username = session?.user?.username ?? null;
+  const studentKelas = session?.user?.kelas ?? null;
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,12 +67,8 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
 
   // Muat soal
   useEffect(() => {
+    if (!username) return;
     const load = async () => {
-      const savedUser = localStorage.getItem("tonsea_user");
-      if (!savedUser) {
-        router.push("/login");
-        return;
-      }
       try {
         const res = await fetch(`/api/materi/${id}/quiz`);
         const data = await res.json();
@@ -83,7 +83,7 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
       }
     };
     load();
-  }, [id, router]);
+  }, [id, username]);
 
   // Timer
   useEffect(() => {
@@ -105,22 +105,19 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
     if (!showResult || saved || questions.length === 0) return;
     const save = async () => {
       setSaving(true);
-      const username = localStorage.getItem("tonsea_user");
-      const userKelas = localStorage.getItem("tonsea_user_kelas");
       try {
         // Simpan progress materi (untuk unlock)
         await fetch("/api/materi-progress", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, materiId: parseInt(id, 10), quizScore: percent }),
+          body: JSON.stringify({ materiId: parseInt(id, 10), quizScore: percent }),
         });
         // Simpan skor umum (biar dashboard/leaderboard tetap terisi seperti biasa)
         await fetch("/api/scores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            username,
-            kelas: userKelas || null,
+            kelas: studentKelas || null,
             score,
             total_questions: questions.length,
           }),
@@ -133,7 +130,7 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
       }
     };
     save();
-  }, [showResult, saved, id, percent, score, questions.length]);
+  }, [showResult, saved, id, percent, score, questions.length, studentKelas]);
 
   const wrap = "min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.12),_transparent_30%),linear-gradient(to_bottom,_#f8fbff_0%,_#eef4ff_100%)] py-10 px-4 md:px-8";
 

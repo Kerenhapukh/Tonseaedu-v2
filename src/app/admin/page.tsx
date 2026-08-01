@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, LogOut, Settings2, ShieldCheck, Users } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 const adminModules = [
   {
@@ -22,32 +23,18 @@ const adminModules = [
   },
 ];
 
-async function logoutAdmin() {
-  await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => null);
-  localStorage.removeItem("tonsea_user");
-  localStorage.removeItem("tonsea_user_role");
-  localStorage.removeItem("tonsea_admin");
-  localStorage.removeItem("tonsea_user_name");
-  localStorage.removeItem("tonsea_user_kelas");
-}
-
 export default function AdminDashboard() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const { data: session, status } = useSession();
+  const ready = status === "authenticated" && session?.user?.role === "admin";
 
   useEffect(() => {
-    const role = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
-    if (!localStorage.getItem("tonsea_admin") || role !== "admin") {
-      router.replace("/login");
-      return;
-    }
+    if (status === "loading") return;
+    if (!ready) router.replace("/login");
+  }, [status, ready, router]);
 
-    setReady(true);
-  }, [router]);
-
-  const handleLogout = async () => {
-    await logoutAdmin();
-    router.replace("/");
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/" });
   };
 
   if (!ready) {

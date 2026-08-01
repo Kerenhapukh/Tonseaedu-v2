@@ -1,43 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { BookOpen, Volume2, PlayCircle, Trophy, LogOut } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
-  
-  const [username, setUsername] = useState<string | null>(null);
-  const [userKelas, setUserKelas] = useState<string | null>(null);
+  const { data: session } = useSession();
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("tonsea_user");
-    const savedKelas = localStorage.getItem("tonsea_user_kelas");
-
-    if (savedUser) setUsername(savedUser);
-    if (savedKelas) {
-      const normalized = savedKelas.replace(/\D/g, "");
-      setUserKelas(normalized ? `Kelas ${normalized}` : savedKelas);
-    } else {
-      setUserKelas(null);
-    }
     setIsProfileOpen(false);
   }, [pathname]);
 
+  const username = session?.user?.username ?? null;
+  const userKelas = useMemo(() => {
+    const kelas = session?.user?.kelas;
+    if (!kelas) return null;
+    const normalized = kelas.replace(/\D/g, "");
+    return normalized ? `Kelas ${normalized}` : kelas;
+  }, [session?.user?.kelas]);
+
   const handleLogout = () => {
-    localStorage.removeItem("tonsea_user");
-    localStorage.removeItem("tonsea_user_role");
-    localStorage.removeItem("tonsea_user_name");
-    localStorage.removeItem("tonsea_user_kelas");
-    localStorage.removeItem("tonsea_admin");
-    localStorage.removeItem("tonsea_admin_role");
-    setUsername(null);
-    setUserKelas(null);
     setIsProfileOpen(false);
-    router.replace("/");
+    signOut({ callbackUrl: "/" });
   };
 
   const menuItems = useMemo(() => [

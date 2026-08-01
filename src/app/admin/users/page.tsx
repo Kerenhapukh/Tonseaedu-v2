@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Plus, Search, ShieldCheck, Trash2, UserCog } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 type Guru = {
   id: number;
@@ -22,6 +23,7 @@ const emptyForm = {
 
 export default function AdminGuruPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [gurus, setGurus] = useState<Guru[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,14 +34,15 @@ export default function AdminGuruPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const role = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
-    if (!localStorage.getItem("tonsea_admin") || role !== "admin") {
+    if (status === "loading") return;
+    if (session?.user?.role !== "admin") {
       router.replace("/login");
       return;
     }
 
     fetchGurus();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, router]);
 
   const fetchGurus = async () => {
     setLoading(true);

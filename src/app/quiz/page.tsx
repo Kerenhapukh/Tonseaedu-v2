@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { 
+import {
   ArrowLeft, 
   Sparkles, 
   Trophy, 
@@ -16,17 +15,13 @@ import {
   BookOpen,
   HelpCircle
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface QuizQuestion {
   id: number;
   question: string;
   correct_answer: string;
   options: string[];
-}
-
-interface UserKelasResult {
-  username?: string;
-  kelas?: string | null;
 }
 
 const shuffle = <T,>(array: T[]): T[] => {
@@ -39,19 +34,16 @@ const shuffle = <T,>(array: T[]): T[] => {
 };
 
 export default function QuizPage() {
-  const router = useRouter();
+  const { data: session } = useSession();
+  const username = session?.user?.username ?? "";
+  const studentKelas = session?.user?.kelas ?? null;
+
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isStarted, setIsStarted] = useState(false);
-  const [studentKelas] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return localStorage.getItem("tonsea_user_kelas");
-  });
 
   const [stats, setStats] = useState({
     totalQuizzes: 0,
@@ -112,31 +104,16 @@ export default function QuizPage() {
     nextQuestion();
   };
 
-  const [user] = useState<string>(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return localStorage.getItem("tonsea_user") || "";
-  });
-
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-    }
-  }, [router, user]);
-
   // Effect untuk menyimpan skor ketika kuis selesai
   useEffect(() => {
-    if (showResult && user && questions.length > 0) {
+    if (showResult && username && questions.length > 0) {
       const saveScore = async () => {
         try {
-          const userKelas = localStorage.getItem("tonsea_user_kelas");
           await fetch('/api/scores', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              username: user,
-              kelas: userKelas || null,
+              kelas: studentKelas || null,
               score: score,
               total_questions: questions.length
             })
@@ -147,7 +124,7 @@ export default function QuizPage() {
       };
       saveScore();
     }
-  }, [showResult, user, score, questions.length]);
+  }, [showResult, username, studentKelas, score, questions.length]);
 
   // Effect untuk Timer
   useEffect(() => {
@@ -167,39 +144,22 @@ export default function QuizPage() {
   }, [loading, showResult, questions.length, isStarted, nextQuestion]);
 
   useEffect(() => {
-    const initDataAndQuestions = async () => {
-      let userKelas = localStorage.getItem("tonsea_user_kelas");
-      const savedUser = localStorage.getItem("tonsea_user");
-      
-      if (!userKelas && savedUser) {
-        try {
-          const res = await fetch('/api/admin/users');
-          const users = (await res.json()) as UserKelasResult[];
-          const currentUser = users.find((u) => u.username === savedUser);
-          if (currentUser && currentUser.kelas) {
-            userKelas = currentUser.kelas;
-            localStorage.setItem("tonsea_user_kelas", currentUser.kelas as string);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
+    if (!username) return;
 
+    const initDataAndQuestions = async () => {
       try {
         let materiUrl = '/api/materi';
-        if (userKelas) {
-          materiUrl += `?kelas=${userKelas}`;
+        if (studentKelas) {
+          materiUrl += `?kelas=${studentKelas}`;
         }
         const materiRes = await fetch(materiUrl);
         const materiJson = await materiRes.json();
         setMateriList(materiJson.data || []);
 
-        if (savedUser) {
-          const scoreRes = await fetch(`/api/scores?username=${encodeURIComponent(savedUser)}`);
-          const scoreData = await scoreRes.json();
-          if (scoreData.data) {
-            setStats(scoreData.data);
-          }
+        const scoreRes = await fetch(`/api/scores?username=${encodeURIComponent(username)}`);
+        const scoreData = await scoreRes.json();
+        if (scoreData.data) {
+          setStats(scoreData.data);
         }
       } catch (error) {
         console.error("Gagal memuat materi list atau stats kuis:", error);
@@ -208,7 +168,7 @@ export default function QuizPage() {
       }
     };
     initDataAndQuestions();
-  }, []);
+  }, [username, studentKelas]);
 
   if (loading) {
     return (

@@ -15,6 +15,7 @@ import {
   HelpCircle,
   RotateCcw,
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 interface Materi {
   id: number;
@@ -77,13 +78,14 @@ const shuffleArray = <T,>(arr: T[]) => {
 
 export default function MateriDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
+  const { data: session } = useSession();
+  const username = session?.user?.username ?? null;
 
   const [materi, setMateri] = useState<Materi | null>(null);
   const [materiList, setMateriList] = useState<Materi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [username, setUsername] = useState<string | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [progressLoaded, setProgressLoaded] = useState(false);
 
@@ -99,11 +101,6 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean; message: string } | null>(null);
-
-  // Ambil username dari localStorage
-  useEffect(() => {
-    setUsername(localStorage.getItem('tonsea_user'));
-  }, []);
 
   // Load data materi + daftar materi (untuk next/prev)
   useEffect(() => {

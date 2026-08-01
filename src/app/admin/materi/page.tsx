@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Materi {
   id: number;
@@ -40,9 +41,10 @@ const inputBaseClass =
 
 export default function AdminMateriPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [materiList, setMateriList] = useState<Materi[]>([]);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState('');
+  const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
   const [showForm, setShowForm] = useState(false);
@@ -77,16 +79,16 @@ export default function AdminMateriPage() {
   };
 
   useEffect(() => {
-    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    setRole(currentRole);
-    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
     if (!isPrivileged) {
       router.replace('/login');
       return;
     }
 
     fetchMateri();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, role, router]);
 
   const groupedMateri = useMemo(() => {
     const groups: Record<string, Materi[]> = {

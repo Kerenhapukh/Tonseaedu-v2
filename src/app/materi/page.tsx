@@ -14,6 +14,7 @@ import {
   Flame,
   Check
 } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 interface Materi {
   id: number;
@@ -30,11 +31,6 @@ interface ProgressItem {
   quizScore?: number | null;
 }
 
-interface UserKelasResult {
-  username?: string;
-  kelas?: string | null;
-}
-
 const KELAS_ORDER = ['7', '8', '9', 'umum'];
 
 const normalizeKelas = (kelas?: string | null) => {
@@ -44,20 +40,27 @@ const normalizeKelas = (kelas?: string | null) => {
 };
 
 export default function UserMateriPage() {
+  const { data: session } = useSession();
+  const username = session?.user?.username ?? null;
+  const studentKelas = session?.user?.kelas ?? null;
+
   const [materiList, setMateriList] = useState<Materi[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [studentKelas, setStudentKelas] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>(() =>
+    studentKelas ? normalizeKelas(studentKelas) : '7'
+  );
 
   const kelasLabel = studentKelas ? `Kelas ${studentKelas.replace(/\D/g, '') || studentKelas}` : 'Semua Kelas';
 
   useEffect(() => {
-    const fetchMateri = async (kelasFilter: string | null, username: string) => {
+    if (!username) return;
+
+    const fetchMateri = async () => {
       try {
         let url = '/api/materi';
-        if (kelasFilter) url += `?kelas=${kelasFilter}`;
+        if (studentKelas) url += `?kelas=${studentKelas}`;
 
         const [materiRes, progressRes] = await Promise.all([
           fetch(url),
@@ -83,40 +86,8 @@ export default function UserMateriPage() {
       }
     };
 
-    const initData = async () => {
-      const savedUser = localStorage.getItem('tonsea_user');
-      let userKelas = localStorage.getItem('tonsea_user_kelas');
-
-      if (!userKelas && savedUser) {
-        try {
-          const res = await fetch('/api/admin/users');
-          const users = (await res.json()) as UserKelasResult[];
-          const currentUser = users.find((u) => u.username === savedUser);
-          if (currentUser && currentUser.kelas) {
-            userKelas = currentUser.kelas;
-            localStorage.setItem('tonsea_user_kelas', userKelas);
-          }
-        } catch {
-          console.error('Gagal sinkronisasi data user');
-        }
-      }
-
-      setStudentKelas(userKelas);
-      if (userKelas) {
-        setActiveTab(normalizeKelas(userKelas));
-      } else {
-        setActiveTab('7');
-      }
-
-      if (savedUser) {
-        await fetchMateri(userKelas, savedUser);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    initData();
-  }, []);
+    fetchMateri();
+  }, [username, studentKelas]);
 
   // Filter berdasarkan pencarian
   const filteredMateriList = useMemo(() => {

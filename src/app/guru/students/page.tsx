@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Plus, Search, ShieldCheck, Trash2, User } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 type Siswa = {
   id: number;
@@ -25,6 +26,7 @@ const emptyForm = {
 
 export default function GuruStudentsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [students, setStudents] = useState<Siswa[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,14 +37,14 @@ export default function GuruStudentsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const role = (localStorage.getItem("tonsea_admin_role") || "").toLowerCase();
-    const isAdmin = !!localStorage.getItem("tonsea_admin");
-    if (!isAdmin || role !== "guru") {
+    if (status === "loading") return;
+    if (session?.user?.role !== "guru") {
       router.replace("/login");
       return;
     }
     fetchStudents();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, router]);
 
   const fetchStudents = async () => {
     setLoading(true);

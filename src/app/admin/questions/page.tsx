@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Question {
   id: number;
@@ -20,9 +21,10 @@ interface Question {
 
 export default function AdminQuestionsPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState('');
+  const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
   const fetchQuestions = async () => {
@@ -38,16 +40,16 @@ export default function AdminQuestionsPage() {
   };
 
   useEffect(() => {
-    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    setRole(currentRole);
-    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
     if (!isPrivileged) {
       router.replace('/login');
       return;
     }
 
     fetchQuestions();
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, role, router]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Yakin ingin menghapus kuis ini?')) return;

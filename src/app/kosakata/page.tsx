@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { Volume2, Search, BookMarked, Sparkles, VolumeX } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 interface Kosakata {
   id: number;
@@ -14,12 +15,13 @@ interface Kosakata {
 }
 
 export default function KosakataPage() {
+  const { data: session } = useSession();
+  const isStudent = session?.user?.role === 'siswa';
   const [kosakata, setKosakata] = useState<Kosakata[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [isStudent, setIsStudent] = useState(false);
 
   useEffect(() => {
     api.get('/kosakata')
@@ -32,16 +34,6 @@ export default function KosakataPage() {
         setError("Gagal memuat daftar kosakata.");
         setLoading(false);
       });
-  }, []);
-
-  useEffect(() => {
-    try {
-      const isUser = !!localStorage.getItem('tonsea_user');
-      const isAdmin = !!localStorage.getItem('tonsea_admin');
-      setIsStudent(isUser && !isAdmin);
-    } catch (e) {
-      setIsStudent(false);
-    }
   }, []);
 
   const playAudio = (url: string | null | undefined) => {

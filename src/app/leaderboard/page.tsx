@@ -4,60 +4,23 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { Trophy, Crown, Sparkles, Award, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 export default function LeaderboardPage() {
+  const { data: session } = useSession();
+  const userKelas = session?.user?.kelas ?? null;
+
   const [leaders, setLeaders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [kelasOptions] = useState<string[]>(['Semua', '7', '8', '9']);
   const [filterKelas, setFilterKelas] = useState<string>('Semua');
-  const [isSiswa, setIsSiswa] = useState(false);
-  const [siswaKelasLabel, setSiswaKelasLabel] = useState<string>('');
 
   useEffect(() => {
-    const adminRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    const isAdminOrGuru = !!localStorage.getItem('tonsea_admin') && (adminRole === 'admin' || adminRole === 'guru');
+    if (!userKelas) return;
+    const normalized = userKelas.replace(/\D/g, '');
+    if (normalized) setFilterKelas(normalized);
+  }, [userKelas]);
 
-    if (isAdminOrGuru) {
-      setIsSiswa(false);
-      setFilterKelas('Semua');
-      return;
-    }
-
-    const savedUser = localStorage.getItem('tonsea_user');
-    const userKelas = localStorage.getItem('tonsea_user_kelas');
-
-    if (savedUser) {
-      setIsSiswa(true);
-      if (userKelas) {
-        const normalized = userKelas.replace(/\D/g, '');
-        if (normalized) {
-          setFilterKelas(normalized);
-          setSiswaKelasLabel(`Kelas ${normalized}`);
-          return;
-        }
-      }
-
-      // Ambil data user jika kelas belum ada di localStorage
-      api.get('/admin/users')
-        .then(res => {
-          if (Array.isArray(res.data)) {
-            const current = res.data.find((u: any) => u.username === savedUser);
-            if (current && current.kelas) {
-              const normalized = String(current.kelas).replace(/\D/g, '');
-              if (normalized) {
-                localStorage.setItem('tonsea_user_kelas', current.kelas);
-                setFilterKelas(normalized);
-                setSiswaKelasLabel(`Kelas ${normalized}`);
-              }
-            }
-          }
-        })
-        .catch(() => {});
-    } else {
-      setIsSiswa(false);
-    }
-  }, []);
+  const siswaKelasLabel = filterKelas !== 'Semua' ? `Kelas ${filterKelas}` : '';
 
   useEffect(() => {
     setLoading(true);
@@ -129,25 +92,9 @@ export default function LeaderboardPage() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-            {isSiswa ? (
-              <span className="px-5 py-2.5 rounded-full bg-blue-600 text-white font-extrabold text-xs shadow-md shadow-blue-500/20">
-                {siswaKelasLabel}
-              </span>
-            ) : (
-              kelasOptions.map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setFilterKelas(opt)}
-                  className={`px-5 py-2.5 rounded-full text-xs font-extrabold transition-all whitespace-nowrap ${
-                    filterKelas === opt
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {opt === 'Semua' ? 'Semua Kelas' : `Kelas ${opt}`}
-                </button>
-              ))
-            )}
+            <span className="px-5 py-2.5 rounded-full bg-blue-600 text-white font-extrabold text-xs shadow-md shadow-blue-500/20">
+              {siswaKelasLabel || 'Semua Kelas'}
+            </span>
           </div>
         </div>
 

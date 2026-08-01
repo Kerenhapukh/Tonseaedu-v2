@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Filter, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface ScoreData {
   id: number;
@@ -19,16 +20,16 @@ const KELAS_OPTIONS = ['Semua', '7', '8', '9'];
 
 export default function RekapNilaiPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [scores, setScores] = useState<ScoreData[]>([]);
   const [loading, setLoading] = useState(true);
   const [kelasFilter, setKelasFilter] = useState('Semua');
-  const [role, setRole] = useState('');
+  const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
   useEffect(() => {
-    const currentRole = (localStorage.getItem('tonsea_admin_role') || '').toLowerCase();
-    setRole(currentRole);
-    const isPrivileged = !!localStorage.getItem('tonsea_admin') && (currentRole === 'admin' || currentRole === 'guru');
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
     if (!isPrivileged) {
       router.replace('/login');
       return;
@@ -36,7 +37,7 @@ export default function RekapNilaiPage() {
 
     fetchScores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kelasFilter, router]);
+  }, [status, role, kelasFilter, router]);
 
   const fetchScores = async () => {
     setLoading(true);
