@@ -91,7 +91,7 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
   const [secondsLeft, setSecondsLeft] = useState(READ_TIMER_SECONDS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Kuis gerbang
+  /Kuis gerbang/ 
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizUnavailable, setQuizUnavailable] = useState(false);
@@ -350,7 +350,7 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-amber-800">Waktu Membaca Wajib</p>
                     <p className="text-sm font-semibold text-amber-900 mt-0.5">
-                      Silakan baca materi dengan teliti. Kuis gerbang dapat diakses dalam{' '}
+                      Silakan baca materi dengan teliti ada Kuis diakhir materi yang bisa diakses dalam{' '}
                       <span className="inline-flex px-2 py-0.5 rounded-lg bg-amber-200 text-amber-900 font-mono font-bold text-base shadow-inner">{secondsLeft}</span> detik.
                     </p>
                   </div>
@@ -397,7 +397,7 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
                     <div className="flex items-center gap-2">
                       <HelpCircle size={18} className="text-indigo-600" />
                       <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-indigo-700">
-                        Kuis Materi Ini
+                        Kuis Materi (Uji Pemahaman)
                       </h2>
                     </div>
                     {quizQuestions.length > 0 && (

@@ -50,11 +50,23 @@ export default function RegisterGuruPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.18),_transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-4 py-10 flex items-center justify-center relative overflow-hidden">
-      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[520px] h-[520px] bg-blue-500 rounded-full blur-[120px] opacity-20 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[520px] h-[520px] bg-cyan-400 rounded-full blur-[120px] opacity-15 pointer-events-none" />
+    <div className="min-h-[100dvh] w-full flex flex-col justify-center items-center bg-slate-950 px-4 py-8 sm:py-12 relative overflow-x-hidden">
+      {/* Gambar Background Foto Halaman Registrasi (Fixed inset-0 agar tidak terpotong di layar HP maupun laptop) */}
+      <img 
+        src="/images/login-bg.jpg" 
+        alt="Latar Belakang Registrasi TonseaEdu" 
+        className="fixed inset-0 w-full h-[100dvh] object-cover object-center opacity-30 pointer-events-none scale-100 sm:scale-105 transition-all duration-700"
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = 'none';
+        }}
+      />
 
-     <div className="w-full max-w-xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_24px_80px_rgba(15,23,42,0.35)] relative z-10 my-6">
+      {/* Overlay Gradients & Glow (Fixed 100dvh) */}
+      <div className="fixed inset-0 bg-gradient-to-tr from-slate-950/95 via-slate-950/70 to-slate-950/85 pointer-events-none z-[1]" />
+      <div className="fixed top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[300px] sm:w-[520px] h-[300px] sm:h-[520px] bg-blue-500/20 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none z-[2]" />
+      <div className="fixed bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[300px] sm:w-[520px] h-[300px] sm:h-[520px] bg-cyan-400/20 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none z-[2]" />
+
+     <div className="w-full max-w-lg sm:max-w-xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-2xl shadow-[0_24px_80px_rgba(15,23,42,0.45)] relative z-10 my-auto">
 
         <div className="p-5 sm:p-10">
           <div className="mb-6 flex items-center gap-3">

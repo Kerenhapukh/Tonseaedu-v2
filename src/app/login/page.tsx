@@ -104,23 +104,23 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 relative overflow-hidden">
-      {/* Gambar Background Foto Halaman Login */}
+    <div className="min-h-[100dvh] w-full flex flex-col justify-center items-center bg-slate-950 px-4 py-8 sm:py-12 relative overflow-x-hidden">
+      {/* Gambar Background Foto Halaman Login (Fixed inset-0 agar tidak terpotong di layar HP maupun laptop) */}
       <img 
         src="/images/login-bg.jpg" 
         alt="Latar Belakang Login TonseaEdu" 
-        className="absolute inset-0 w-full h-full object-cover object-center opacity-40 pointer-events-none scale-105 animate-[pulse_10s_infinite]"
+        className="fixed inset-0 w-full h-[100dvh] object-cover object-center opacity-40 pointer-events-none scale-100 sm:scale-105 transition-all duration-700"
         onError={(e) => {
           (e.target as HTMLElement).style.display = 'none';
         }}
       />
 
-      {/* Overlay Gradients & Glow */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/90 via-slate-950/60 to-slate-950/80 z-[1]" />
-      <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
-      <div className="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[600px] h-[600px] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none z-[2]" />
+      {/* Overlay Gradients & Glow (Fixed 100dvh) */}
+      <div className="fixed inset-0 bg-gradient-to-tr from-slate-950/95 via-slate-950/70 to-slate-950/85 pointer-events-none z-[1]" />
+      <div className="fixed top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-blue-500/20 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none z-[2]" />
+      <div className="fixed bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-indigo-500/20 rounded-full blur-[80px] sm:blur-[120px] pointer-events-none z-[2]" />
 
-      <div className="max-w-md w-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.4)] relative z-10 my-6">
+      <div className="max-w-sm sm:max-w-md w-full rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden border border-white/20 bg-white/95 backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.45)] relative z-10 my-auto">
         <div className="p-5 sm:p-10">
           <div className="mb-6 flex items-center gap-3">
             <div className="bg-blue-600 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">

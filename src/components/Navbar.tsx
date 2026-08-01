@@ -43,7 +43,7 @@ export default function Navbar() {
   const menuItems = useMemo(() => [
     { name: "Materi", href: "/materi", icon: BookOpen },
     { name: "Kosakata", href: "/kosakata", icon: Volume2 },
-    { name: "Kuis", href: "/quiz", icon: PlayCircle },
+    { name: "Latihan Kuis", href: "/quiz", icon: PlayCircle },
     { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
   ], []);
 
