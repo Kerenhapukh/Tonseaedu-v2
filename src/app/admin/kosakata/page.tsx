@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Volume2, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Volume2, Plus, Pencil, Trash2, Search, Filter, Tag, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -26,14 +26,16 @@ export default function AdminKosakataPage() {
   const [kosakataList, setKosakataList] = useState<Kosakata[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // State pencarian & filter kategori
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
   // State form
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   
-  // Mengosongkan audio_url karena kita beralih ke upload file mentah
   const [formData, setFormData] = useState({ tonsea: '', indonesia: '', categoryName: '' });
-  // State baru khusus menyimpan file audio fisik
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,6 +63,32 @@ export default function AdminKosakataPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, router]);
 
+  // Daftar kategori unik untuk filter
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    kosakataList.forEach((k) => {
+      if (k.category?.name) set.add(k.category.name);
+    });
+    return Array.from(set).sort();
+  }, [kosakataList]);
+
+  // Filter kosakata berdasarkan query pencarian dan kategori yang dipilih
+  const filteredKosakataList = useMemo(() => {
+    return kosakataList.filter((k) => {
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !query ||
+        k.tonsea.toLowerCase().includes(query) ||
+        k.indonesia.toLowerCase().includes(query) ||
+        (k.category?.name && k.category.name.toLowerCase().includes(query));
+
+      const matchesCategory =
+        !selectedCategory || (k.category && k.category.name === selectedCategory);
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [kosakataList, searchQuery, selectedCategory]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.tonsea || !formData.indonesia || !formData.categoryName) {
@@ -72,31 +100,28 @@ export default function AdminKosakataPage() {
       const url = isEditing && editId ? `/api/kosakata/${editId}` : '/api/kosakata';
       const method = isEditing && editId ? 'PUT' : 'POST';
 
-      // 1. GANTI CONVERSION JSON MENJADI FORMDATA
       const dataToSend = new FormData();
       dataToSend.append('tonsea', formData.tonsea);
       dataToSend.append('indonesia', formData.indonesia);
       dataToSend.append('categoryName', formData.categoryName);
       
-      // Masukkan file audio jika guru/admin memilih berkas file baru
       if (audioFile) {
         dataToSend.append('audio', audioFile);
       }
 
       const res = await fetch(url, {
         method,
-        // PENTING: Jangan gunakan headers 'Content-Type': 'application/json'
         body: dataToSend
       });
       
       if (res.ok) {
         alert(isEditing ? "Kosakata berhasil diperbarui!" : "Kosakata berhasil ditambahkan!");
         setFormData({ tonsea: '', indonesia: '', categoryName: '' });
-        setAudioFile(null); // Reset input file audio
+        setAudioFile(null);
         setShowForm(false);
         setIsEditing(false);
         setEditId(null);
-        fetchData(); // Refresh data halaman
+        fetchData();
       } else {
         const errorData = await res.json();
         throw new Error(errorData.error || (isEditing ? "Gagal memperbarui kosakata" : "Gagal menambah kosakata"));
@@ -114,21 +139,11 @@ export default function AdminKosakataPage() {
       indonesia: k.indonesia,
       categoryName: k.category?.name || '',
     });
-    setAudioFile(null); // Kosongkan pilihan file audio sebelumnya
+    setAudioFile(null);
     setEditId(k.id);
     setIsEditing(true);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const resetForm = () => {
-    setShowForm(!showForm);
-    if (!showForm) {
-      setFormData({ tonsea: '', indonesia: '', categoryName: '' });
-      setAudioFile(null);
-      setIsEditing(false);
-      setEditId(null);
-    }
   };
 
   const handleDelete = async (id: number) => {
@@ -157,7 +172,7 @@ export default function AdminKosakataPage() {
 
         {/* Header Card */}
         <div className="rounded-[2rem] border border-slate-200 bg-white/90 backdrop-blur-xl shadow-[0_20px_70px_rgba(15,23,42,0.08)] p-8 lg:p-10 mb-8">
-        <Link
+          <Link
             href="/admin"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors w-fit"
           >
@@ -278,6 +293,88 @@ export default function AdminKosakataPage() {
           </div>
         )}
 
+        {/* Filter & Bar Pencarian Kosakata */}
+        <div className="bg-white p-5 rounded-[2rem] shadow-[0_20px_70px_rgba(15,23,42,0.08)] border border-slate-200 mb-8 space-y-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            {/* Input Pencarian */}
+            <div className="relative w-full md:w-80">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari kata Tonsea / Indonesia..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                  title="Hapus pencarian"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+
+            {/* Selector Dropdown Kategori */}
+            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">
+                <Filter size={16} className="text-blue-600" /> Kategori:
+              </div>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 cursor-pointer"
+              >
+                <option value="">Semua Kategori ({kosakataList.length})</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat} ({kosakataList.filter((k) => k.category?.name === cat).length})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Quick Category Filter Pills */}
+          {categories.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setSelectedCategory('')}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                  selectedCategory === ''
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Semua ({kosakataList.length})
+              </button>
+              {categories.map((cat) => {
+                const count = kosakataList.filter((k) => k.category?.name === cat).length;
+                const isSelected = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(isSelected ? '' : cat)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <Tag size={13} />
+                    {cat}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Tabel Daftar Kosakata */}
         <div className="bg-white rounded-[2rem] shadow-[0_20px_70px_rgba(15,23,42,0.08)] border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
@@ -292,14 +389,29 @@ export default function AdminKosakataPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {kosakataList.length === 0 ? (
+                {filteredKosakataList.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                      Belum ada kosakata yang ditambahkan.
+                      {searchQuery || selectedCategory ? (
+                        <div className="space-y-3">
+                          <p className="font-semibold text-slate-600">Tidak ada kosakata yang cocok dengan filter pencarian / kategori.</p>
+                          <button
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSelectedCategory('');
+                            }}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition"
+                          >
+                            Reset Filter
+                          </button>
+                        </div>
+                      ) : (
+                        "Belum ada kosakata yang ditambahkan."
+                      )}
                     </td>
                   </tr>
                 ) : (
-                  kosakataList.map((k) => (
+                  filteredKosakataList.map((k) => (
                     <tr key={k.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 font-bold text-slate-800">{k.tonsea}</td>
                       <td className="px-6 py-4 text-slate-600">{k.indonesia}</td>
