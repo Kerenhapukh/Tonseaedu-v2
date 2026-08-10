@@ -327,7 +327,7 @@ export default function AdminKosakataPage() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 cursor-pointer"
               >
-                <option value="">Semua Kategori ({kosakataList.length})</option>
+                <option value="">Semua Kategori ({categories.length})</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat} ({kosakataList.filter((k) => k.category?.name === cat).length})
@@ -348,7 +348,7 @@ export default function AdminKosakataPage() {
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                Semua ({kosakataList.length})
+                Semua Kategori ({categories.length})
               </button>
               {categories.map((cat) => {
                 const count = kosakataList.filter((k) => k.category?.name === cat).length;

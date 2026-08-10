@@ -6,7 +6,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const kelasSiswa = searchParams.get('kelas');
 
-    const whereClause: any = {};
+    const whereClause: any = {
+      materiId: null, // HANYA mengambil soal umum (bukan soal kuis gerbang materi)
+    };
     if (kelasSiswa) {
       const tingkatKelas = kelasSiswa.replace(/\D/g, '');
       if (tingkatKelas) {

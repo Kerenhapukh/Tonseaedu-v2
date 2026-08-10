@@ -123,11 +123,26 @@ export default function UserMateriPage() {
     : 0;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] py-8 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <main className="min-h-screen bg-slate-950 relative overflow-hidden py-8 px-4 md:px-8">
+      {/* Gambar Latar Belakang Siswa Materi */}
+      <img
+        src="/images/siswa-materi-bg.jpg"
+        alt="Background Siswa Materi"
+        className="fixed inset-0 w-full h-[100dvh] object-cover object-center opacity-30 pointer-events-none scale-105 transition-all duration-1000"
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = 'none';
+        }}
+      />
+
+      {/* Layer Gradient Overlay & Ambient Glow */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/75 to-slate-950/90 pointer-events-none z-[1]" />
+      <div className="fixed top-0 right-10 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+      <div className="fixed bottom-0 left-10 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+
+      <div className="max-w-7xl mx-auto space-y-8 relative z-10">
         
         {/* Hero Banner Section */}
-        <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 text-white p-8 md:p-12 shadow-[0_25px_60px_-15px_rgba(29,78,216,0.35)]">
+        <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-700/90 via-indigo-700/90 to-slate-900/90 text-white p-8 md:p-12 shadow-[0_25px_60px_-15px_rgba(29,78,216,0.4)] border border-white/10 backdrop-blur-xl">
           {/* Ambient Lighting & Background Pattern */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-400/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-1/3 -mb-20 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />

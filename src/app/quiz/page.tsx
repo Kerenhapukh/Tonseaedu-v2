@@ -205,20 +205,35 @@ export default function QuizPage() {
       : 0;
 
     return (
-      <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] py-8 px-4 md:px-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="min-h-screen bg-slate-950 relative overflow-hidden py-8 px-4 md:px-8">
+        {/* Gambar Latar Belakang Siswa Kuis */}
+        <img
+          src="/images/siswa-quiz-bg.jpg"
+          alt="Background Siswa Quiz"
+          className="fixed inset-0 w-full h-[100dvh] object-cover object-center opacity-30 pointer-events-none scale-105 transition-all duration-1000"
+          onError={(e) => {
+            (e.target as HTMLElement).style.display = 'none';
+          }}
+        />
+
+        {/* Layer Gradient Overlay & Ambient Glow */}
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/75 to-slate-950/90 pointer-events-none z-[1]" />
+        <div className="fixed top-0 right-10 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+        <div className="fixed bottom-0 left-10 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+
+        <div className="max-w-6xl mx-auto space-y-8 relative z-10">
           
           {/* Navigation back button */}
           <Link 
             href="/materi" 
-            className="group inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md px-4 py-2 text-sm font-bold text-slate-700 shadow-sm border border-slate-200/80 hover:bg-white hover:text-blue-600 transition-all hover:shadow-md hover:-translate-x-0.5"
+            className="group inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-sm font-bold text-white shadow-sm border border-white/20 hover:bg-white/20 hover:text-cyan-300 transition-all hover:shadow-md hover:-translate-x-0.5"
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform text-slate-500 group-hover:text-blue-600" />
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform text-white group-hover:text-cyan-300" />
             Kembali ke Daftar Materi
           </Link>
 
           {/* Hero Banner Section */}
-          <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 text-white p-8 md:p-12 shadow-[0_25px_60px_-15px_rgba(29,78,216,0.35)]">
+          <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-700/90 via-indigo-700/90 to-slate-900/90 text-white p-8 md:p-12 shadow-[0_25px_60px_-15px_rgba(29,78,216,0.4)] border border-white/10 backdrop-blur-xl">
             <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400/30 to-indigo-400/10 blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-1/3 -mb-20 h-72 w-72 rounded-full bg-cyan-400/20 blur-3xl pointer-events-none" />
 

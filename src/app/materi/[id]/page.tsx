@@ -283,13 +283,28 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
   const canProceedToNext = !nextMateri || alreadyCompleted || (submitted && quizResult?.passed) || quizUnavailable;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] py-8 px-4 md:px-8">
-      <div className="mx-auto max-w-5xl space-y-6">
+    <main className="min-h-screen bg-slate-950 relative overflow-hidden py-8 px-4 md:px-8">
+      {/* Gambar Latar Belakang Siswa Detail Materi */}
+      <img
+        src="/images/siswa-materi-bg.jpg"
+        alt="Background Detail Materi Siswa"
+        className="fixed inset-0 w-full h-[100dvh] object-cover object-center opacity-30 pointer-events-none scale-105 transition-all duration-1000"
+        onError={(e) => {
+          (e.target as HTMLElement).style.display = 'none';
+        }}
+      />
+
+      {/* Layer Gradient Overlay & Ambient Glow */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/75 to-slate-950/90 pointer-events-none z-[1]" />
+      <div className="fixed top-0 right-10 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+      <div className="fixed bottom-0 left-10 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none z-[2]" />
+
+      <div className="mx-auto max-w-5xl space-y-6 relative z-10">
         <Link 
           href="/materi" 
-          className="group inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md px-4 py-2 text-sm font-bold text-slate-700 shadow-sm border border-slate-200/80 hover:bg-white hover:text-blue-600 transition-all hover:shadow-md hover:-translate-x-0.5"
+          className="group inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-sm font-bold text-white shadow-sm border border-white/20 hover:bg-white/20 hover:text-cyan-300 transition-all hover:shadow-md hover:-translate-x-0.5"
         >
-          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform text-slate-500 group-hover:text-blue-600" />
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform text-white group-hover:text-cyan-300" />
           Kembali ke Daftar Materi
         </Link>
 
