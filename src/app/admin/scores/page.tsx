@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Filter, Trophy } from 'lucide-react';
+import { ArrowLeft, Filter, Trophy, FileSpreadsheet, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -66,6 +66,57 @@ export default function RekapNilaiPage() {
     }).format(date);
   };
 
+  const handleExportCSV = () => {
+    if (scores.length === 0) {
+      alert("Tidak ada data nilai untuk diexport.");
+      return;
+    }
+
+    const headers = [
+      "No",
+      "Nama Siswa",
+      "Username",
+      "Kelas",
+      "Kategori Kuis",
+      "Skor",
+      "Total Soal",
+      "Persentase (%)",
+      "Tanggal Dikerjakan"
+    ];
+
+    const rows = scores.map((score, index) => {
+      const percentage = score.totalQuestions > 0 
+        ? Math.round((score.score / score.totalQuestions) * 100) 
+        : 0;
+      const kategori = score.totalQuestions > 0 ? "Umum" : "-";
+      const formattedDate = formatDate(score.createdAt);
+      
+      return [
+        index + 1,
+        `"${(score.namaSiswa || '').replace(/"/g, '""')}"`,
+        `"${(score.username || '').replace(/"/g, '""')}"`,
+        `"${(score.kelas || '-').replace(/"/g, '""')}"`,
+        `"${kategori.replace(/"/g, '""')}"`,
+        score.score,
+        score.totalQuestions,
+        `"${percentage}%"`,
+        `"${formattedDate.replace(/"/g, '""')}"`
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    const filename = `Rekap_Nilai_Siswa_${kelasFilter === 'Semua' ? 'Semua_Kelas' : `Kelas_${kelasFilter}`}_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.08),_transparent_28%),linear-gradient(to_bottom,_#ffffff_0%,_#f8fafc_40%,_#f8fafc_100%)] p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
@@ -93,19 +144,32 @@ export default function RekapNilaiPage() {
               </p>
             </div>
 
-            {/* Dropdown Filter Kelas */}
-            <div className="flex items-center gap-2 bg-slate-50 px-5 py-3 border border-slate-200 rounded-full shadow-sm hover:border-blue-300 transition-colors">
-              <Filter size={16} className="text-blue-600" />
-              <span className="text-sm font-bold text-slate-700">Filter Kelas:</span>
-              <select
-                className="bg-transparent border-none outline-none font-bold text-blue-700 cursor-pointer ml-1"
-                value={kelasFilter}
-                onChange={(e) => setKelasFilter(e.target.value)}
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              {/* Dropdown Filter Kelas */}
+              <div className="flex items-center gap-2 bg-slate-50 px-5 py-3 border border-slate-200 rounded-full shadow-sm hover:border-blue-300 transition-colors">
+                <Filter size={16} className="text-blue-600" />
+                <span className="text-sm font-bold text-slate-700">Filter Kelas:</span>
+                <select
+                  className="bg-transparent border-none outline-none font-bold text-blue-700 cursor-pointer ml-1"
+                  value={kelasFilter}
+                  onChange={(e) => setKelasFilter(e.target.value)}
+                >
+                  {KELAS_OPTIONS.map(opt => (
+                    <option key={opt} value={opt}>{opt === 'Semua' ? 'Semua' : `Kelas ${opt}`}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tombol Export ke Excel / CSV */}
+              <button
+                onClick={handleExportCSV}
+                disabled={loading || scores.length === 0}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed shadow-emerald-600/20"
+                title="Unduh rekap nilai ke format Excel/CSV"
               >
-                {KELAS_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt === 'Semua' ? 'Semua' : `Kelas ${opt}`}</option>
-                ))}
-              </select>
+                <FileSpreadsheet size={18} />
+                Export Excel
+              </button>
             </div>
           </div>
         </div>
@@ -163,7 +227,7 @@ export default function RekapNilaiPage() {
                           score.score >= 80 ? 'bg-green-100 text-green-700' :
                           score.score >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                         }`}>
-                          {score.score} / 100
+                          {score.score} / {score.totalQuestions}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500">

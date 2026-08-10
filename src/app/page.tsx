@@ -1,26 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import 
-{Mail, 
-Phone, 
-BookOpen, 
-GraduationCap, 
-ChevronRight,
-MapPin, 
-Headphones, 
-Target, 
-Activity,
-Trophy, 
-Users, 
-FileText, 
-Sparkles, 
-Globe, 
-ArrowRight,
-Flame
+import {
+  Mail, 
+  Phone, 
+  BookOpen, 
+  GraduationCap, 
+  ChevronRight,
+  MapPin, 
+  Headphones, 
+  Target, 
+  Activity,
+  Trophy, 
+  Users, 
+  FileText, 
+  Sparkles, 
+  Globe, 
+  ArrowRight,
+  Flame,
+  Menu,
+  X
 } from "lucide-react";
+import { useState } from "react";
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const navItems = [
     { label: "Beranda", href: "#beranda" },
     { label: "Tentang", href: "#tentang" },
@@ -49,21 +54,21 @@ export default function LandingPage() {
 
   {/* Navigation Bar */}
   <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-slate-200">
-    <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center w-full">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex justify-between items-center w-full">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 shrink-0 group">
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2.5 rounded-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
-          <BookOpen size={24} strokeWidth={2.5} />
+      <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0 group">
+        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
+          <BookOpen size={20} className="sm:w-6 sm:h-6" strokeWidth={2.5} />
         </div>
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight leading-none group-hover:text-blue-600 transition-colors">TonseaEdu</h1>
-          <p className="text-[10px] items-center flex gap-1 font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-none group-hover:text-blue-600 transition-colors">TonseaEdu</h1>
+          <p className="text-[9px] sm:text-[10px] items-center flex gap-1 font-semibold text-slate-500 uppercase tracking-widest mt-0.5">
             <Globe size={10} className="text-blue-500" /> Lestarikan Budaya
           </p>
         </div>
       </Link>
 
-      {/* Menus */}
+      {/* Desktop Menus */}
       <nav className="hidden md:flex gap-1 items-center bg-slate-100/50 p-1.5 rounded-full border border-slate-200/50">
         {navItems.map((item) => (
           <a
@@ -76,12 +81,52 @@ export default function LandingPage() {
         ))}
       </nav>
       
-      <div className="flex items-center gap-4 shrink-0">
-         <Link href="/login" className="hidden md:flex items-center justify-center font-semibold text-slate-600 hover:text-blue-600 transition-colors text-sm">
-            Masuk
-         </Link>
+      {/* Desktop Login Button */}
+      <div className="hidden md:flex items-center gap-4 shrink-0">
+        <Link href="/login" className="px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all hover:-translate-y-0.5">
+          Masuk
+        </Link>
+      </div>
+
+      {/* Mobile Actions & Hamburger Toggle */}
+      <div className="flex items-center gap-2 md:hidden">
+        <Link href="/login" className="px-3.5 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs shadow-sm">
+          Masuk
+        </Link>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none"
+          aria-label="Toggle Navigation Menu"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </div>
     </div>
+
+    {/* Mobile Navigation Drawer */}
+    {mobileMenuOpen && (
+      <div className="md:hidden bg-white/95 backdrop-blur-2xl border-b border-slate-200 px-4 py-4 space-y-2 shadow-2xl animate-in fade-in slide-in-from-top-3">
+        {navItems.map((item) => (
+          <a
+            key={item.label}
+            href={item.href}
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-4 py-3 rounded-2xl text-sm font-bold text-slate-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+          >
+            {item.label}
+          </a>
+        ))}
+        <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+          <Link
+            href="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-center text-sm shadow-md shadow-blue-500/20 active:scale-98 transition-all"
+          >
+            Masuk Akun
+          </Link>
+        </div>
+      </div>
+    )}
   </header>
 
   {/* Hero Section */}
