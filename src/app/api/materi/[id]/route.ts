@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireRole } from '@/lib/apiAuth';
+import { uploadMateriImage, deleteMateriImage } from '@/lib/imageStorage';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -26,6 +27,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         bab: materi.bab,
         ringkasan: materi.ringkasan,
         videoUrl: materi.videoUrl,
+        imageUrl: materi.imageUrl,
       },
     });
   } catch (error) {
@@ -39,27 +41,48 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (response) return response;
 
   try {
-    const body = await req.json();
-    const { title, content, categoryId, kelas, judul, konten, bab, ringkasan, summary, deskripsi, videoUrl } = body;
+    const formData = await req.formData();
+    const title = formData.get('title') as string | null;
+    const content = formData.get('content') as string | null;
+    const categoryId = formData.get('categoryId') as string | null;
+    const kelas = formData.get('kelas') as string | null;
+    const judul = formData.get('judul') as string | null;
+    const konten = formData.get('konten') as string | null;
+    const bab = formData.get('bab') as string | null;
+    const ringkasan = formData.get('ringkasan') as string | null;
+    const summary = formData.get('summary') as string | null;
+    const deskripsi = formData.get('deskripsi') as string | null;
+    const videoUrl = formData.get('videoUrl') as string | null;
+    const imageFile = formData.get('image') as File | null;
     const { id } = await params;
-    
+
     const finalJudul = title || judul;
     const finalKonten = content || konten;
     const finalRingkasan = ringkasan || summary || deskripsi || null;
     const finalBab = bab || null;
     const finalVideoUrl = videoUrl || null;
-    
+
     if (!finalJudul || !finalKonten) {
        return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
     }
 
     const existingMateri = await prisma.materi.findUnique({
       where: { id: parseInt(id) },
-      select: { categoryId: true },
+      select: { categoryId: true, imageUrl: true },
     });
 
     if (!existingMateri) {
       return NextResponse.json({ error: 'Materi tidak ditemukan' }, { status: 404 });
+    }
+
+    let finalImageUrl = existingMateri.imageUrl;
+    if (imageFile && imageFile.size > 0) {
+      try {
+        finalImageUrl = await uploadMateriImage(imageFile);
+        await deleteMateriImage(existingMateri.imageUrl).catch(() => {});
+      } catch (uploadError: any) {
+        console.warn("Gagal mengunggah gambar materi baru ke Supabase Storage:", uploadError?.message);
+      }
     }
 
     const finalResolvedCategoryId = categoryId ? parseInt(categoryId) : existingMateri.categoryId;
@@ -67,13 +90,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const updatedMateri = await prisma.materi.update({
       where: { id: parseInt(id) },
       data: {
-        judul: finalJudul, 
-        konten: finalKonten, 
+        judul: finalJudul,
+        konten: finalKonten,
         bab: finalBab,
         ringkasan: finalRingkasan,
         categoryId: finalResolvedCategoryId,
-        kelas: kelas || null, 
+        kelas: kelas || null,
         videoUrl: finalVideoUrl,
+        imageUrl: finalImageUrl,
       },
     });
 
@@ -91,9 +115,16 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   try {
     const { id } = await params;
 
+    const existingMateri = await prisma.materi.findUnique({
+      where: { id: parseInt(id) },
+      select: { imageUrl: true },
+    });
+
     await prisma.materi.delete({
       where: { id: parseInt(id) },
     });
+
+    await deleteMateriImage(existingMateri?.imageUrl).catch(() => console.log("File gambar materi tidak ditemukan di storage, abaikan."));
 
     return NextResponse.json({ message: 'Materi berhasil dihapus' }, { status: 200 });
   } catch (error) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video } from 'lucide-react';
+import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video, Image as ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -14,6 +14,7 @@ interface Materi {
   ringkasan?: string | null;
   kelas?: string | null;
   videoUrl?: string | null;
+  imageUrl?: string | null;
   category?: {
     id: number;
     name: string;
@@ -58,7 +59,17 @@ export default function AdminMateriPage() {
     content: '',
     videoUrl: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    setImagePreview((prev) => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+  };
 
   const fetchMateri = async () => {
     try {
@@ -125,22 +136,24 @@ export default function AdminMateriPage() {
       const url = isEditing && editId ? `/api/materi/${editId}` : '/api/materi';
       const method = isEditing && editId ? 'PUT' : 'POST';
 
+      const dataToSend = new FormData();
+      dataToSend.append('judul', formData.title);
+      dataToSend.append('konten', formData.content);
+      dataToSend.append('kelas', formData.kelas);
+      dataToSend.append('bab', formData.bab);
+      dataToSend.append('ringkasan', formData.ringkasan);
+      if (formData.videoUrl) dataToSend.append('videoUrl', formData.videoUrl);
+      if (imageFile) dataToSend.append('image', imageFile);
+
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          judul: formData.title,
-          konten: formData.content,
-          kelas: formData.kelas,
-          bab: formData.bab,
-          ringkasan: formData.ringkasan,
-          videoUrl: formData.videoUrl || null,
-        }),
+        body: dataToSend,
       });
 
       if (res.ok) {
         alert(isEditing ? 'Materi berhasil diperbarui!' : 'Materi berhasil ditambahkan!');
         setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+        handleImageChange(null);
         setShowForm(false);
         setIsEditing(false);
         setEditId(null);
@@ -164,6 +177,11 @@ export default function AdminMateriPage() {
       content: materi.content,
       videoUrl: materi.videoUrl || '',
     });
+    setImageFile(null);
+    setImagePreview((prev) => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return materi.imageUrl || null;
+    });
     setEditId(materi.id);
     setIsEditing(true);
     setShowForm(true);
@@ -174,6 +192,7 @@ export default function AdminMateriPage() {
     setShowForm(!showForm);
     if (!showForm) {
       setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+      handleImageChange(null);
       setIsEditing(false);
       setEditId(null);
     }
@@ -215,6 +234,16 @@ export default function AdminMateriPage() {
             </span>
           )}
         </div>
+
+        {materi.imageUrl && (
+          <div className="mb-4 aspect-video overflow-hidden rounded-xl border border-slate-200">
+            <img
+              src={materi.imageUrl}
+              alt={materi.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
 
         <h3 className="text-lg font-black text-slate-950 leading-tight">{materi.title}</h3>
         <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-4">
@@ -392,6 +421,28 @@ export default function AdminMateriPage() {
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 />
+              </div>
+
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                  <ImageIcon size={14} className="text-slate-400" />
+                  Gambar Materi <span className="font-normal text-slate-400">(Opsional)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600 shadow-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                  onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
+                />
+                {imagePreview && (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+                    <img
+                      src={imagePreview}
+                      alt="Pratinjau gambar materi"
+                      className="max-h-64 w-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

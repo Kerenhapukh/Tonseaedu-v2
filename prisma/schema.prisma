@@ -48,6 +48,7 @@ model Materi {
   bab        String?
   ringkasan  String?
   videoUrl   String?
+  imageUrl   String?
   sequence   Int              @default(0)
   category   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   progress   MateriProgress[]

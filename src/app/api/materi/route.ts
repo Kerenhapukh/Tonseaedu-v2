@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { requireRole } from '@/lib/apiAuth';
+import { uploadMateriImage } from '@/lib/imageStorage';
 
 export async function GET(request: Request) {
   try {
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
       bab: m.bab,
       ringkasan: m.ringkasan,
       videoUrl: m.videoUrl,
+      imageUrl: m.imageUrl,
     }));
 
     return NextResponse.json({ success: true, data: formattedMateri });
@@ -59,9 +61,20 @@ export async function POST(request: Request) {
   if (response) return response;
 
   try {
-    const body = await request.json();
-    const { judul, konten, categoryId, title, content, kelas, bab, ringkasan, summary, deskripsi, videoUrl } = body;
-    
+    const formData = await request.formData();
+    const judul = formData.get('judul') as string | null;
+    const konten = formData.get('konten') as string | null;
+    const categoryId = formData.get('categoryId') as string | null;
+    const title = formData.get('title') as string | null;
+    const content = formData.get('content') as string | null;
+    const kelas = formData.get('kelas') as string | null;
+    const bab = formData.get('bab') as string | null;
+    const ringkasan = formData.get('ringkasan') as string | null;
+    const summary = formData.get('summary') as string | null;
+    const deskripsi = formData.get('deskripsi') as string | null;
+    const videoUrl = formData.get('videoUrl') as string | null;
+    const imageFile = formData.get('image') as File | null;
+
     const finalJudul = judul || title;
     const finalKonten = konten || content;
     const finalRingkasan = ringkasan || summary || deskripsi || null;
@@ -73,6 +86,15 @@ export async function POST(request: Request) {
         { success: false, error: "Judul dan konten wajib diisi." },
         { status: 400 }
       );
+    }
+
+    let finalImageUrl: string | null = null;
+    if (imageFile && imageFile.size > 0) {
+      try {
+        finalImageUrl = await uploadMateriImage(imageFile);
+      } catch (uploadError: any) {
+        console.warn("Gagal mengunggah gambar materi ke Supabase Storage:", uploadError?.message);
+      }
     }
 
     let finalResolvedCategoryId = categoryId ? Number(categoryId) : null;
@@ -100,6 +122,7 @@ export async function POST(request: Request) {
         categoryId: finalResolvedCategoryId,
         kelas: kelas || null,
         videoUrl: finalVideoUrl,
+        imageUrl: finalImageUrl,
       }
     });
 

@@ -25,6 +25,7 @@ interface Materi {
   ringkasan?: string | null;
   kelas?: string | null;
   videoUrl?: string | null;
+  imageUrl?: string | null;
   createdAt?: string;
   category?: {
     id: number;
@@ -368,6 +369,16 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
               )}
+
+              {materi.imageUrl ? (
+                <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 shadow-sm">
+                  <img
+                    src={materi.imageUrl}
+                    alt={materi.title}
+                    className="max-h-[420px] w-full object-cover"
+                  />
+                </section>
+              ) : null}
 
               {materi.ringkasan ? (
                 <section className="rounded-[1.5rem] border border-blue-100 bg-blue-50/70 p-5 sm:p-6">
