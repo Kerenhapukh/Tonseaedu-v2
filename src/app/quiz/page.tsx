@@ -24,6 +24,19 @@ interface QuizQuestion {
   options: string[];
 }
 
+const formatQuizSchedule = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d).replace('.', ':');
+};
+
 const shuffle = <T,>(array: T[]): T[] => {
   const newArr = [...array];
   for (let i = newArr.length - 1; i > 0; i--) {
@@ -52,21 +65,36 @@ export default function QuizPage() {
     totalQuestions: 0,
     streak: 0,
   });
-  const [materiList, setMateriList] = useState<{ id: number; judul: string; kelas?: string | null }[]>([]);
+  const [materiList, setMateriList] = useState<{ id: number; judul: string; kelas?: string | null; quizStartAt?: string | null; quizEndAt?: string | null }[]>([]);
   const [selectedMateriId, setSelectedMateriId] = useState<string>("");
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [quizStartAt, setQuizStartAt] = useState<string | null>(null);
+  const [quizEndAt, setQuizEndAt] = useState<string | null>(null);
+  const [isQuizOpen, setIsQuizOpen] = useState<boolean>(true);
+  const [quizStatusMessage, setQuizStatusMessage] = useState<string>("");
 
   const handleMateriChange = async (materiIdStr: string) => {
     setSelectedMateriId(materiIdStr);
+    setQuizStartAt(null);
+    setQuizEndAt(null);
+    setIsQuizOpen(true);
+    setQuizStatusMessage("");
+
     if (!materiIdStr) {
       setQuestions([]);
       return;
     }
-    
+
     setLoadingQuestions(true);
     try {
       const res = await fetch(`/api/materi/${materiIdStr}/quiz`);
       const data = await res.json();
+
+      if (data?.materi?.quizStartAt) setQuizStartAt(data.materi.quizStartAt);
+      if (data?.materi?.quizEndAt) setQuizEndAt(data.materi.quizEndAt);
+      if (typeof data?.materi?.isQuizOpen === 'boolean') setIsQuizOpen(data.materi.isQuizOpen);
+      if (data?.materi?.quizStatusMessage) setQuizStatusMessage(data.materi.quizStatusMessage);
+
       const quizQuestions = (data.data || data) as QuizQuestion[];
       const randomized = shuffle(quizQuestions).map((q) => ({
         ...q,
@@ -259,13 +287,19 @@ export default function QuizPage() {
                     onChange={(e) => handleMateriChange(e.target.value)}
                   >
                     <option value="" className="text-slate-900 font-bold">-- Pilih Materi Pembelajaran --</option>
-                    {materiList.map((m) => (
-                      <option key={m.id} value={m.id} className="text-slate-900 font-medium">
-                        {m.judul}
-                      </option>
-                    ))}
+                    {materiList.map((m) => {
+                      const now = new Date();
+                      const notYet = m.quizStartAt ? now < new Date(m.quizStartAt) : false;
+                      const expired = m.quizEndAt ? now > new Date(m.quizEndAt) : false;
+                      const suffix = notYet ? ' (Belum Dibuka)' : expired ? ' (Ditutup)' : '';
+                      return (
+                        <option key={m.id} value={m.id} className="text-slate-900 font-medium">
+                          {m.judul}{suffix}
+                        </option>
+                      );
+                    })}
                   </select>
-                  
+
                   <p className="text-xs text-blue-100/90 font-semibold pt-1">
                     {selectedMateriId ? (
                       loadingQuestions ? (
@@ -280,6 +314,27 @@ export default function QuizPage() {
                       "Pilih materi di atas untuk mengaktifkan kuis."
                     )}
                   </p>
+
+                  {/* Jadwal & Batas Waktu Kuis */}
+                  {selectedMateriId && !loadingQuestions && (formatQuizSchedule(quizStartAt) || formatQuizSchedule(quizEndAt)) && (
+                    <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-md p-4 text-xs space-y-1.5">
+                      <p className="font-extrabold text-white flex items-center gap-1.5 text-sm">
+                        <Clock3 size={14} className="text-cyan-300" />
+                        Batas Waktu Pengerjaan Kuis
+                      </p>
+                      {formatQuizSchedule(quizStartAt) && (
+                        <p className="text-blue-100 font-semibold">🗓️ <b>Dibuka:</b> {formatQuizSchedule(quizStartAt)}</p>
+                      )}
+                      {formatQuizSchedule(quizEndAt) && (
+                        <p className="text-blue-100 font-semibold">⏰ <b>Ditutup:</b> {formatQuizSchedule(quizEndAt)}</p>
+                      )}
+                      {!isQuizOpen && (
+                        <div className="mt-2 rounded-xl bg-red-500/20 border border-red-300/40 p-3 text-red-100 font-bold text-xs flex items-center gap-2">
+                          ⚠️ {quizStatusMessage || 'Kuis tidak dapat diakses saat ini.'}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -346,14 +401,14 @@ export default function QuizPage() {
             <div className="pt-2">
               <button
                 onClick={() => setIsStarted(true)}
-                disabled={!selectedMateriId || loadingQuestions || questions.length === 0}
+                disabled={!selectedMateriId || loadingQuestions || questions.length === 0 || !isQuizOpen}
                 className={`inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-black text-white transition-all shadow-lg ${
-                  !selectedMateriId || loadingQuestions || questions.length === 0
+                  !selectedMateriId || loadingQuestions || questions.length === 0 || !isQuizOpen
                     ? "bg-slate-300 cursor-not-allowed opacity-60 shadow-none"
                     : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:scale-95"
                 }`}
               >
-                Mulai Kuis Sekarang
+                {selectedMateriId && !loadingQuestions && !isQuizOpen ? (quizStatusMessage || 'Kuis Tidak Tersedia') : 'Mulai Kuis Sekarang'}
                 <ChevronRight size={20} />
               </button>
             </div>
