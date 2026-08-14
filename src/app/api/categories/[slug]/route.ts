@@ -1,5 +1,35 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/apiAuth';
+
+// Catatan: parameter path ini bernama `slug` untuk menghindari konflik rute dengan
+// GET di atas, tapi pada PUT nilainya adalah ID numerik kategori (lihat pemanggilnya).
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { response } = await requireRole(['admin', 'guru']);
+  if (response) return response;
+
+  try {
+    const id = (await params).slug;
+    const body = await req.json();
+    const { quizStartAt, quizEndAt } = body;
+
+    const updatedCategory = await prisma.category.update({
+      where: { id: parseInt(id) },
+      data: {
+        quizStartAt: quizStartAt ? new Date(quizStartAt) : null,
+        quizEndAt: quizEndAt ? new Date(quizEndAt) : null,
+      },
+    });
+
+    return NextResponse.json(updatedCategory);
+  } catch (error) {
+    console.error('Error updating category schedule:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
 
 export async function GET(
   request: Request,

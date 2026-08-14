@@ -13,7 +13,10 @@ interface Question {
   kelas?: string;
   materiId?: number | null;
   category?: {
+    id: number;
     name: string;
+    quizStartAt?: string | null;
+    quizEndAt?: string | null;
   };
   materi?: {
     id: number;
@@ -25,13 +28,22 @@ interface Question {
   };
 }
 
+interface ScheduleTarget {
+  type: 'materi' | 'category';
+  id: number;
+  title: string;
+  quizStartAt?: string | null;
+  quizEndAt?: string | null;
+}
+
 interface QuestionGroup {
   key: string;
   title: string;
   bab?: string | null;
   kelas: string;
-  materi: Question['materi'] | null;
+  hasMateri: boolean;
   categoryName: string | null;
+  scheduleTarget: ScheduleTarget | null;
   questions: Question[];
 }
 
@@ -75,7 +87,7 @@ export default function AdminQuestionsPage() {
   const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
-  const [editingMateri, setEditingMateri] = useState<{ id: number; judul: string; quizStartAt?: string | null; quizEndAt?: string | null } | null>(null);
+  const [editingTarget, setEditingTarget] = useState<ScheduleTarget | null>(null);
   const [quizStartAtInput, setQuizStartAtInput] = useState('');
   const [quizEndAtInput, setQuizEndAtInput] = useState('');
   const [savingSchedule, setSavingSchedule] = useState(false);
@@ -85,15 +97,22 @@ export default function AdminQuestionsPage() {
     const map = new Map<string, QuestionGroup>();
 
     questions.forEach((q) => {
-      const key = q.materi ? `materi-${q.materi.id}` : `kategori-${q.category?.name || 'umum'}`;
+      const key = q.materi ? `materi-${q.materi.id}` : `kategori-${q.category?.id ?? 'umum'}`;
       if (!map.has(key)) {
+        const scheduleTarget: ScheduleTarget | null = q.materi
+          ? { type: 'materi', id: q.materi.id, title: q.materi.judul, quizStartAt: q.materi.quizStartAt, quizEndAt: q.materi.quizEndAt }
+          : q.category
+          ? { type: 'category', id: q.category.id, title: q.category.name, quizStartAt: q.category.quizStartAt, quizEndAt: q.category.quizEndAt }
+          : null;
+
         map.set(key, {
           key,
           title: q.materi ? q.materi.judul : (q.category?.name || 'Soal Umum'),
           bab: q.materi?.bab,
           kelas: normalizeKelas(q.materi?.kelas ?? q.kelas),
-          materi: q.materi ?? null,
+          hasMateri: !!q.materi,
           categoryName: q.category?.name ?? null,
+          scheduleTarget,
           questions: [],
         });
       }
@@ -152,32 +171,43 @@ export default function AdminQuestionsPage() {
     }
   };
 
-  const handleOpenScheduleModal = (materi: { id: number; judul: string; quizStartAt?: string | null; quizEndAt?: string | null }) => {
-    setEditingMateri(materi);
-    setQuizStartAtInput(toDatetimeLocal(materi.quizStartAt));
-    setQuizEndAtInput(toDatetimeLocal(materi.quizEndAt));
+  const handleOpenScheduleModal = (target: ScheduleTarget) => {
+    setEditingTarget(target);
+    setQuizStartAtInput(toDatetimeLocal(target.quizStartAt));
+    setQuizEndAtInput(toDatetimeLocal(target.quizEndAt));
   };
 
   const handleSaveSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingMateri) return;
+    if (!editingTarget) return;
 
     setSavingSchedule(true);
     try {
-      const formData = new FormData();
-      formData.append('title', editingMateri.judul);
-      formData.append('content', 'placeholder');
-      formData.append('quizStartAt', quizStartAtInput || '');
-      formData.append('quizEndAt', quizEndAtInput || '');
-
-      const res = await fetch(`/api/materi/${editingMateri.id}`, {
-        method: 'PUT',
-        body: formData,
-      });
+      let res: Response;
+      if (editingTarget.type === 'materi') {
+        const formData = new FormData();
+        formData.append('title', editingTarget.title);
+        formData.append('content', 'placeholder');
+        formData.append('quizStartAt', quizStartAtInput || '');
+        formData.append('quizEndAt', quizEndAtInput || '');
+        res = await fetch(`/api/materi/${editingTarget.id}`, {
+          method: 'PUT',
+          body: formData,
+        });
+      } else {
+        res = await fetch(`/api/categories/${editingTarget.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quizStartAt: quizStartAtInput || null,
+            quizEndAt: quizEndAtInput || null,
+          }),
+        });
+      }
 
       if (res.ok) {
         alert('Batas waktu kuis berhasil diperbarui!');
-        setEditingMateri(null);
+        setEditingTarget(null);
         fetchQuestions();
       } else {
         alert('Gagal memperbarui batas waktu kuis');
@@ -237,10 +267,10 @@ export default function AdminQuestionsPage() {
           ) : (
             groupedQuestions.map((group) => {
               const now = new Date();
-              const startFormatted = formatQuizSchedule(group.materi?.quizStartAt);
-              const endFormatted = formatQuizSchedule(group.materi?.quizEndAt);
-              const isNotStarted = group.materi?.quizStartAt ? now < new Date(group.materi.quizStartAt) : false;
-              const isExpired = group.materi?.quizEndAt ? now > new Date(group.materi.quizEndAt) : false;
+              const startFormatted = formatQuizSchedule(group.scheduleTarget?.quizStartAt);
+              const endFormatted = formatQuizSchedule(group.scheduleTarget?.quizEndAt);
+              const isNotStarted = group.scheduleTarget?.quizStartAt ? now < new Date(group.scheduleTarget.quizStartAt) : false;
+              const isExpired = group.scheduleTarget?.quizEndAt ? now > new Date(group.scheduleTarget.quizEndAt) : false;
 
               return (
                 <section key={group.key} className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -252,32 +282,28 @@ export default function AdminQuestionsPage() {
                       {group.bab && (
                         <span className="px-2.5 py-1 text-xs font-bold bg-amber-50 text-amber-700 rounded-full">{group.bab}</span>
                       )}
-                      {group.materi ? (
-                        isNotStarted ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                            <Lock size={11} /> Belum Dibuka
-                          </span>
-                        ) : isExpired ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                            <XCircle size={11} /> Ditutup
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-                            <CheckCircle2 size={11} /> Aktif
-                          </span>
-                        )
+                      {isNotStarted ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                          <Lock size={11} /> Belum Dibuka
+                        </span>
+                      ) : isExpired ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                          <XCircle size={11} /> Ditutup
+                        </span>
                       ) : (
-                        <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-500 rounded-full">Tanpa Batas</span>
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                          <CheckCircle2 size={11} /> Aktif
+                        </span>
                       )}
                     </div>
 
                     <h2 className="text-lg font-black text-slate-950">{group.title}</h2>
                     <p className="mt-0.5 text-xs text-slate-500">
                       {group.questions.length} soal
-                      {!group.materi && group.categoryName ? ` • Kategori: ${group.categoryName}` : ''}
+                      {!group.hasMateri && group.categoryName ? ` • Kategori: ${group.categoryName}` : ''}
                     </p>
 
-                    {group.materi && (
+                    {group.scheduleTarget && (
                       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
                         <span className="text-slate-600 font-medium">
                           🗓️ <b>Dibuka:</b> {startFormatted || <span className="text-slate-400 italic">Langsung</span>}
@@ -286,7 +312,7 @@ export default function AdminQuestionsPage() {
                           ⏰ <b>Ditutup:</b> {endFormatted || <span className="text-slate-400 italic">Tanpa Batas</span>}
                         </span>
                         <button
-                          onClick={() => handleOpenScheduleModal(group.materi!)}
+                          onClick={() => handleOpenScheduleModal(group.scheduleTarget!)}
                           className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline"
                         >
                           <Pencil size={12} /> Ubah Batas Waktu
@@ -309,7 +335,7 @@ export default function AdminQuestionsPage() {
                           <tr key={q.id} className="hover:bg-slate-50 transition-colors">
                             <td className="px-6 py-4">
                               <div className="text-sm text-slate-900 font-medium line-clamp-2">{q.question}</div>
-                              {!group.materi && (
+                              {!group.hasMateri && (
                                 <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded-md">
                                   {q.kelas ? `Kelas ${q.kelas}` : 'Menyeluruh'}
                                 </span>
@@ -345,11 +371,11 @@ export default function AdminQuestionsPage() {
       </div>
 
       {/* Modal Edit Batas Waktu Kuis Guru */}
-      {editingMateri && (
+      {editingTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl p-6 sm:p-8 max-w-lg w-full space-y-6 relative animate-in zoom-in-95">
             <button
-              onClick={() => setEditingMateri(null)}
+              onClick={() => setEditingTarget(null)}
               className="absolute top-6 right-6 p-2 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             >
               <X size={20} />
@@ -361,7 +387,9 @@ export default function AdminQuestionsPage() {
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-950">Atur Batas Waktu Kuis</h3>
-                <p className="text-xs text-slate-500 font-semibold">{editingMateri.judul}</p>
+                <p className="text-xs text-slate-500 font-semibold">
+                  {editingTarget.type === 'materi' ? 'Materi' : 'Kategori'}: {editingTarget.title}
+                </p>
               </div>
             </div>
 
@@ -399,7 +427,7 @@ export default function AdminQuestionsPage() {
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setEditingMateri(null)}
+                  onClick={() => setEditingTarget(null)}
                   className="px-5 py-2.5 rounded-full border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
                   Batal

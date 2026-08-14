@@ -30,6 +30,8 @@ model Category {
   name        String
   slug        String     @unique
   description String?
+  quizStartAt DateTime?
+  quizEndAt   DateTime?
   kosakata    Kosakata[]
   materi      Materi[]
   questions   Question[]
