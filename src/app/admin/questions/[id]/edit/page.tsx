@@ -3,8 +3,25 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
+
+interface MateriItem {
+  id: number;
+  judul: string;
+  categoryId: number;
+  kelas?: string | null;
+  quizStartAt?: string | null;
+  quizEndAt?: string | null;
+}
+
+const toDatetimeLocal = (dateStr?: string | null) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 export default function EditQuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -17,7 +34,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [materiList, setMateriList] = useState<{ id: number; judul: string; categoryId: number; kelas?: string | null }[]>([]);
+  const [materiList, setMateriList] = useState<MateriItem[]>([]);
   
   const [formData, setFormData] = useState({
     question: "",
@@ -27,6 +44,8 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
     kelas: "",
     materiId: "",
   });
+  const [quizStartAt, setQuizStartAt] = useState('');
+  const [quizEndAt, setQuizEndAt] = useState('');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -49,7 +68,8 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
         const materiJson = await materiRes.json();
         
         setCategories(cats);
-        setMateriList(materiJson.data || []);
+        const mList: MateriItem[] = materiJson.data || [];
+        setMateriList(mList);
 
         const currentQ = questions.find((q: any) => q.id === parseInt(id));
         
@@ -62,6 +82,17 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
             kelas: currentQ.kelas || "",
             materiId: currentQ.materiId ? currentQ.materiId.toString() : "",
           });
+
+          if (currentQ.materi) {
+            setQuizStartAt(toDatetimeLocal(currentQ.materi.quizStartAt));
+            setQuizEndAt(toDatetimeLocal(currentQ.materi.quizEndAt));
+          } else if (currentQ.materiId) {
+            const foundM = mList.find(m => m.id === currentQ.materiId);
+            if (foundM) {
+              setQuizStartAt(toDatetimeLocal(foundM.quizStartAt));
+              setQuizEndAt(toDatetimeLocal(foundM.quizEndAt));
+            }
+          }
         } else {
           alert("Kuis tidak ditemukan!");
           router.push("/admin/questions");
@@ -88,6 +119,20 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
       });
 
       if (res.ok) {
+        // Update batas waktu kuis materi jika diisi
+        const selectedMateri = materiList.find(m => m.id === parseInt(formData.materiId, 10));
+        if (selectedMateri) {
+          const updateData = new FormData();
+          updateData.append('title', selectedMateri.judul);
+          updateData.append('content', 'placeholder');
+          updateData.append('quizStartAt', quizStartAt || '');
+          updateData.append('quizEndAt', quizEndAt || '');
+          await fetch(`/api/materi/${selectedMateri.id}`, {
+            method: 'PUT',
+            body: updateData,
+          });
+        }
+
         router.push(isGuru ? "/guru" : "/admin/questions");
         router.refresh();
       } else {
@@ -121,7 +166,7 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
 
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
             <BookOpen size={14} />
-            {isGuru ? "Guru / Pengelola Pembelajaran" : "Admin / Pengelola Sistem"}
+            Guru / Pengelola Kuis &amp; Pembelajaran
           </div>
 
           <h1 className="mt-4 text-3xl md:text-4xl font-black tracking-tight text-slate-950">Edit Kuis Tonsea</h1>
@@ -144,6 +189,13 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
                   categoryId: selectedMateri ? selectedMateri.categoryId.toString() : "",
                   kelas: selectedMateri && selectedMateri.kelas ? selectedMateri.kelas : ""
                 });
+                if (selectedMateri) {
+                  setQuizStartAt(toDatetimeLocal(selectedMateri.quizStartAt));
+                  setQuizEndAt(toDatetimeLocal(selectedMateri.quizEndAt));
+                } else {
+                  setQuizStartAt('');
+                  setQuizEndAt('');
+                }
               }}
             >
               <option value="">-- Pilih Materi --</option>
@@ -167,6 +219,39 @@ export default function EditQuestionPage({ params }: { params: Promise<{ id: str
             </select>
           </div>
         </div>
+
+        {/* Batas Waktu Kuis (Schedule) */}
+        {formData.materiId && (
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+              <Clock size={16} className="text-blue-600" />
+              Jadwal &amp; Batas Waktu Pengerjaan Kuis Modul Ini (Buka / Tutup)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">🗓️ Tanggal &amp; Jam Dibuka</label>
+                <input
+                  type="datetime-local"
+                  className="w-full p-2.5 border rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={quizStartAt}
+                  onChange={(e) => setQuizStartAt(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">⏰ Tanggal &amp; Jam Ditutup</label>
+                <input
+                  type="datetime-local"
+                  className="w-full p-2.5 border rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={quizEndAt}
+                  onChange={(e) => setQuizEndAt(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-slate-500 italic">
+              * Guru dapat mengatur tanggal kuis dibuka &amp; ditutup di sini. Setelah jam ditutup, siswa tidak dapat mengerjakan kuis ini lagi.
+            </p>
+          </div>
+        )}
 
         {/* Pertanyaan */}
         <div>
