@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Plus, Clock, Pencil, CheckCircle2, XCircle, Lock, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -18,10 +18,30 @@ interface Question {
   materi?: {
     id: number;
     judul: string;
+    kelas?: string | null;
+    bab?: string | null;
     quizStartAt?: string | null;
     quizEndAt?: string | null;
   };
 }
+
+interface QuestionGroup {
+  key: string;
+  title: string;
+  bab?: string | null;
+  kelas: string;
+  materi: Question['materi'] | null;
+  categoryName: string | null;
+  questions: Question[];
+}
+
+const KELAS_ORDER = ['7', '8', '9', 'umum'];
+
+const normalizeKelas = (kelas?: string | null) => {
+  if (!kelas) return 'umum';
+  const onlyNumber = kelas.replace(/\D/g, '');
+  return onlyNumber || 'umum';
+};
 
 const toDatetimeLocal = (dateStr?: string | null) => {
   if (!dateStr) return '';
@@ -59,6 +79,34 @@ export default function AdminQuestionsPage() {
   const [quizStartAtInput, setQuizStartAtInput] = useState('');
   const [quizEndAtInput, setQuizEndAtInput] = useState('');
   const [savingSchedule, setSavingSchedule] = useState(false);
+
+  // Satukan kuis per materi (atau per kategori jika belum terhubung ke materi manapun)
+  const groupedQuestions = useMemo<QuestionGroup[]>(() => {
+    const map = new Map<string, QuestionGroup>();
+
+    questions.forEach((q) => {
+      const key = q.materi ? `materi-${q.materi.id}` : `kategori-${q.category?.name || 'umum'}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          title: q.materi ? q.materi.judul : (q.category?.name || 'Soal Umum'),
+          bab: q.materi?.bab,
+          kelas: normalizeKelas(q.materi?.kelas ?? q.kelas),
+          materi: q.materi ?? null,
+          categoryName: q.category?.name ?? null,
+          questions: [],
+        });
+      }
+      map.get(key)!.questions.push(q);
+    });
+
+    return Array.from(map.values()).sort((a, b) => {
+      const ai = KELAS_ORDER.indexOf(a.kelas);
+      const bi = KELAS_ORDER.indexOf(b.kelas);
+      if (ai !== bi) return ai - bi;
+      return a.title.localeCompare(b.title, 'id');
+    });
+  }, [questions]);
 
   const fetchQuestions = async () => {
     try {
@@ -170,14 +218,8 @@ export default function AdminQuestionsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link 
-                href="/admin/materi" 
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                Kelola Materi
-              </Link>
-              <Link 
-                href="/admin/questions/new" 
+              <Link
+                href="/admin/questions/new"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 hover:-translate-y-0.5 hover:bg-slate-800 transition-all"
               >
                 <Plus size={16} />
@@ -187,106 +229,118 @@ export default function AdminQuestionsPage() {
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-slate-200 bg-white overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Pertanyaan</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Materi</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Batas Waktu Kuis</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Jawaban Benar</th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
-                {questions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-14 text-center text-slate-400">Belum ada kuis. Silakan tambah kuis baru.</td>
-                  </tr>
-                ) : (
-                  questions.map((q) => {
-                    const now = new Date();
-                    const startFormatted = formatQuizSchedule(q.materi?.quizStartAt);
-                    const endFormatted = formatQuizSchedule(q.materi?.quizEndAt);
-                    const isNotStarted = q.materi?.quizStartAt ? now < new Date(q.materi.quizStartAt) : false;
-                    const isExpired = q.materi?.quizEndAt ? now > new Date(q.materi.quizEndAt) : false;
+        <div className="space-y-6">
+          {groupedQuestions.length === 0 ? (
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-14 text-center text-slate-400 shadow-sm">
+              Belum ada kuis. Silakan tambah kuis baru.
+            </div>
+          ) : (
+            groupedQuestions.map((group) => {
+              const now = new Date();
+              const startFormatted = formatQuizSchedule(group.materi?.quizStartAt);
+              const endFormatted = formatQuizSchedule(group.materi?.quizEndAt);
+              const isNotStarted = group.materi?.quizStartAt ? now < new Date(group.materi.quizStartAt) : false;
+              const isExpired = group.materi?.quizEndAt ? now > new Date(group.materi.quizEndAt) : false;
 
-                    return (
-                      <tr key={q.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-slate-900 font-medium line-clamp-2">{q.question}</div>
-                          <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded-md">
-                            {q.kelas ? `Kelas ${q.kelas}` : 'Menyeluruh'}
+              return (
+                <section key={group.key} className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="border-b border-slate-100 bg-slate-50/60 px-6 py-5">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full">
+                        {group.kelas === 'umum' ? 'Umum' : `Kelas ${group.kelas}`}
+                      </span>
+                      {group.bab && (
+                        <span className="px-2.5 py-1 text-xs font-bold bg-amber-50 text-amber-700 rounded-full">{group.bab}</span>
+                      )}
+                      {group.materi ? (
+                        isNotStarted ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                            <Lock size={11} /> Belum Dibuka
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full">
-                            {q.materi?.judul || 'Umum'}
+                        ) : isExpired ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                            <XCircle size={11} /> Ditutup
                           </span>
-                          {q.category && (
-                            <div className="text-xs text-slate-400 mt-1 max-w-[150px] truncate" title={q.category.name}>
-                              Kategori: {q.category.name}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-xs">
-                          {q.materi ? (
-                            <div className="space-y-1.5 min-w-[200px]">
-                              <div className="flex items-center gap-1.5">
-                                {isNotStarted ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-                                    <Lock size={10} /> Belum Dibuka
-                                  </span>
-                                ) : isExpired ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-700">
-                                    <XCircle size={10} /> Ditutup
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                                    <CheckCircle2 size={10} /> Aktif
-                                  </span>
-                                )}
-                              </div>
-                              <div className="bg-slate-50 p-2 rounded-lg border border-slate-200/80 space-y-0.5">
-                                <p className="text-slate-600 font-medium">🗓️ <b>Dibuka:</b> {startFormatted || <span className="text-slate-400 italic">Langsung</span>}</p>
-                                <p className="text-slate-600 font-medium">⏰ <b>Ditutup:</b> {endFormatted || <span className="text-slate-400 italic">Tanpa Batas</span>}</p>
-                              </div>
-                              <button
-                                onClick={() => handleOpenScheduleModal(q.materi!)}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                            <CheckCircle2 size={11} /> Aktif
+                          </span>
+                        )
+                      ) : (
+                        <span className="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-500 rounded-full">Tanpa Batas</span>
+                      )}
+                    </div>
+
+                    <h2 className="text-lg font-black text-slate-950">{group.title}</h2>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {group.questions.length} soal
+                      {!group.materi && group.categoryName ? ` • Kategori: ${group.categoryName}` : ''}
+                    </p>
+
+                    {group.materi && (
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                        <span className="text-slate-600 font-medium">
+                          🗓️ <b>Dibuka:</b> {startFormatted || <span className="text-slate-400 italic">Langsung</span>}
+                        </span>
+                        <span className="text-slate-600 font-medium">
+                          ⏰ <b>Ditutup:</b> {endFormatted || <span className="text-slate-400 italic">Tanpa Batas</span>}
+                        </span>
+                        <button
+                          onClick={() => handleOpenScheduleModal(group.materi!)}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          <Pencil size={12} /> Ubah Batas Waktu
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-100">
+                      <thead>
+                        <tr>
+                          <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pertanyaan</th>
+                          <th className="px-6 py-3 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jawaban Benar</th>
+                          <th className="px-6 py-3 text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {group.questions.map((q) => (
+                          <tr key={q.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-slate-900 font-medium line-clamp-2">{q.question}</div>
+                              {!group.materi && (
+                                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded-md">
+                                  {q.kelas ? `Kelas ${q.kelas}` : 'Menyeluruh'}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-sm text-emerald-600 font-semibold">{q.correctAnswer}</span>
+                            </td>
+                            <td className="px-6 py-4 text-center whitespace-nowrap space-x-3">
+                              <Link
+                                href={`/admin/questions/${q.id}/edit`}
+                                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                               >
-                                <Pencil size={11} /> Ubah Batas Waktu
+                                Edit
+                              </Link>
+                              <button
+                                onClick={() => handleDelete(q.id)}
+                                className="text-red-500 hover:text-red-700 font-medium text-sm"
+                              >
+                                Hapus
                               </button>
-                            </div>
-                          ) : (
-                            <span className="text-slate-400 italic">Soal Umum (Tanpa Batas)</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-emerald-600 font-semibold">{q.correctAnswer}</span>
-                        </td>
-                        <td className="px-6 py-4 text-center whitespace-nowrap space-x-3">
-                          <Link 
-                            href={`/admin/questions/${q.id}/edit`}
-                            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-                          >
-                            Edit
-                          </Link>
-                          <button 
-                            onClick={() => handleDelete(q.id)}
-                            className="text-red-500 hover:text-red-700 font-medium text-sm"
-                          >
-                            Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              );
+            })
+          )}
         </div>
       </div>
 

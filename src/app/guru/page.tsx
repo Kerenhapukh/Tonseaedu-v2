@@ -145,9 +145,9 @@ export default function GuruDashboard() {
                 <BookOpen size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-950">Kelola Materi &amp; Modul Kuis</h3>
+                <h3 className="text-lg font-black text-slate-950">Kelola Materi</h3>
                 <p className="mt-1 text-sm text-slate-500 leading-relaxed">
-                  Atur materi pembelajaran serta tentukan batas waktu pengerjaan kuis per modul.
+                  Atur materi pembelajaran.
                 </p>
               </div>
             </div>
