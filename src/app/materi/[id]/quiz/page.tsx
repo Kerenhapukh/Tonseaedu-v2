@@ -25,6 +25,19 @@ const shuffle = <T,>(array: T[]): T[] => {
   return a;
 };
 
+const formatQuizSchedule = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d).replace('.', ':');
+};
+
 export default function MateriQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -40,6 +53,10 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
   const [showResult, setShowResult] = useState(false);
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const [materiJudul, setMateriJudul] = useState<string>("");
+  const [quizStartAt, setQuizStartAt] = useState<string | null>(null);
+  const [quizEndAt, setQuizEndAt] = useState<string | null>(null);
+  const [isQuizOpen, setIsQuizOpen] = useState<boolean>(true);
+  const [quizStatusMessage, setQuizStatusMessage] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -73,6 +90,11 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
         const res = await fetch(`/api/materi/${id}/quiz`);
         const data = await res.json();
         if (data?.materi?.judul) setMateriJudul(data.materi.judul);
+        if (data?.materi?.quizStartAt) setQuizStartAt(data.materi.quizStartAt);
+        if (data?.materi?.quizEndAt) setQuizEndAt(data.materi.quizEndAt);
+        if (typeof data?.materi?.isQuizOpen === 'boolean') setIsQuizOpen(data.materi.isQuizOpen);
+        if (data?.materi?.quizStatusMessage) setQuizStatusMessage(data.materi.quizStatusMessage);
+
         const qs = (data.data || []) as QuizQuestion[];
         const randomized = shuffle(qs).map((q) => ({ ...q, options: shuffle(q.options || []) }));
         setQuestions(randomized);
@@ -160,6 +182,9 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
 
   // Layar pembuka
   if (!isStarted && !showResult) {
+    const startFormatted = formatQuizSchedule(quizStartAt);
+    const endFormatted = formatQuizSchedule(quizEndAt);
+
     return (
       <main className={wrap}>
         <div className="mx-auto max-w-2xl space-y-6">
@@ -172,15 +197,37 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900">Kuis Materi</h1>
             {materiJudul && <p className="mt-1 text-slate-500 font-semibold">{materiJudul}</p>}
+
+            {/* Badges Jadwal Kuis */}
+            {(startFormatted || endFormatted) && (
+              <div className="my-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-xs shadow-sm space-y-1 text-left">
+                <p className="font-extrabold text-blue-900 text-sm mb-1">Batas Waktu Pengerjaan Kuis:</p>
+                {startFormatted && (
+                  <p className="text-slate-700 font-semibold text-sm">🗓️ <b>Dibuka:</b> {startFormatted}</p>
+                )}
+                {endFormatted && (
+                  <p className="text-slate-700 font-semibold text-sm">⏰ <b>Ditutup:</b> {endFormatted}</p>
+                )}
+              </div>
+            )}
+
+            {!isQuizOpen && (
+              <div className="my-4 rounded-xl bg-red-50 border border-red-200 p-4 text-red-700 font-bold text-sm">
+                ⚠️ {quizStatusMessage || 'Kuis tidak dapat diakses saat ini.'}
+              </div>
+            )}
+
             <p className="mt-4 text-slate-600">
-              Jawab {questions.length} soal. Nilai minimal <b>{PASSING_SCORE}</b> untuk membuka materi berikutnya.
+              Jawab {questions.length} soal. Nilai minimal <b>{PASSING_SCORE}%</b> untuk membuka materi berikutnya.
               Setiap soal punya waktu {SECONDS_PER_QUESTION} detik.
             </p>
+
             <button
               onClick={() => setIsStarted(true)}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-blue-700"
+              disabled={!isQuizOpen}
+              className="mt-6 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              Mulai Kuis <ChevronRight size={18} />
+              {isQuizOpen ? 'Mulai Kuis' : 'Kuis Ditutup'} <ChevronRight size={18} />
             </button>
           </div>
         </div>

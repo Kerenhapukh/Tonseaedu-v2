@@ -50,6 +50,8 @@ model Materi {
   videoUrl   String?
   imageUrl   String?
   sequence   Int              @default(0)
+  quizStartAt  DateTime?
+  quizEndAt    DateTime?
   category   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   progress   MateriProgress[]
   questions  Question[]

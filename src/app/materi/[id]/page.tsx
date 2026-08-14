@@ -26,6 +26,8 @@ interface Materi {
   kelas?: string | null;
   videoUrl?: string | null;
   imageUrl?: string | null;
+  quizStartAt?: string | null;
+  quizEndAt?: string | null;
   createdAt?: string;
   category?: {
     id: number;
@@ -33,6 +35,19 @@ interface Materi {
     slug: string;
   } | null;
 }
+
+const formatQuizSchedule = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d).replace('.', ':');
+};
 
 interface QuizQuestion {
   id: number;
@@ -416,7 +431,7 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
               {/* Gerbang Kuis - muncul kalau timer habis, belum lulus, dan bukan alreadyCompleted */}
               {!alreadyCompleted && timerDone && !quizUnavailable && (
                 <section className="rounded-[1.5rem] border border-indigo-200 bg-indigo-50/70 p-5 sm:p-6">
-                  <div className="flex items-center justify-between gap-3 mb-5">
+                  <div className="flex items-center justify-between gap-3 mb-4">
                     <div className="flex items-center gap-2">
                       <HelpCircle size={18} className="text-indigo-600" />
                       <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-indigo-700">
@@ -430,91 +445,134 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
                     )}
                   </div>
 
-                  {quizLoading ? (
-                    <p className="text-sm text-slate-500">Menyiapkan soal...</p>
-                  ) : quizQuestions.length > 0 ? (
-                    <div className="space-y-5">
-                      {quizQuestions.map((q, idx) => {
-                        const selected = answers[q.id];
-                        const showFeedback = submitted;
+                  {/* Tampilan Jadwal Kuis (🗓️ Dibuka & ⏰ Ditutup) */}
+                  {(() => {
+                    const now = new Date();
+                    const startFormatted = formatQuizSchedule(materi?.quizStartAt);
+                    const endFormatted = formatQuizSchedule(materi?.quizEndAt);
+                    const isNotStartedYet = materi?.quizStartAt ? now < new Date(materi.quizStartAt) : false;
+                    const isExpired = materi?.quizEndAt ? now > new Date(materi.quizEndAt) : false;
 
-                        return (
-                          <div key={q.id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                            <p className="font-semibold text-slate-800 mb-3">
-                              {idx + 1}. {q.pertanyaan}
+                    return (
+                      <>
+                        {(startFormatted || endFormatted) && (
+                          <div className="mb-5 rounded-2xl border border-indigo-200 bg-white p-4 text-xs shadow-sm space-y-1.5">
+                            <p className="font-extrabold text-indigo-900 flex items-center gap-1.5 text-sm">
+                              <Clock3 size={16} className="text-indigo-600" />
+                              Batas Waktu Pengerjaan Kuis
                             </p>
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              {q.options.map((option) => {
-                                const isSelected = selected === option;
-                                const isCorrectOption = option === q.correctAnswer;
-                                const showCorrect = showFeedback && isCorrectOption;
-                                const showWrong = showFeedback && isSelected && !isCorrectOption;
+                            {startFormatted && (
+                              <p className="text-slate-700 font-semibold text-sm">🗓️ <b>Dibuka:</b> {startFormatted}</p>
+                            )}
+                            {endFormatted && (
+                              <p className="text-slate-700 font-semibold text-sm">⏰ <b>Ditutup:</b> {endFormatted}</p>
+                            )}
 
-                                return (
-                                  <button
-                                    key={option}
-                                    type="button"
-                                    onClick={() => handleSelectAnswer(q.id, option)}
-                                    disabled={submitted && quizResult?.passed}
-                                    className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
-                                      showCorrect
-                                        ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
-                                        : showWrong
-                                        ? 'border-red-300 bg-red-50 text-red-700'
-                                        : isSelected
-                                        ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                                        : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50'
-                                    }`}
-                                  >
-                                    {option}
-                                    {showCorrect && <CheckCircle2 size={16} className="shrink-0" />}
-                                    {showWrong && <XCircle size={16} className="shrink-0" />}
-                                  </button>
-                                );
-                              })}
-                            </div>
+                            {isNotStartedYet && (
+                              <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200 p-3 text-amber-800 font-bold text-xs flex items-center gap-2">
+                                <span className="text-base">🔒</span> Kuis Belum Dibuka. Silakan kembali saat jadwal dibuka ({startFormatted}).
+                              </div>
+                            )}
+                            {isExpired && (
+                              <div className="mt-3 rounded-xl bg-red-50 border border-red-200 p-3 text-red-700 font-bold text-xs flex items-center gap-2">
+                                <span className="text-base">⏰</span> Waktu Pengerjaan Kuis Telah Berakhir. Siswa tidak dapat lagi mengerjakan kuis ini.
+                              </div>
+                            )}
                           </div>
-                        );
-                      })}
+                        )}
 
-                      {!submitted ? (
-                        <button
-                          onClick={handleSubmitQuiz}
-                          disabled={!allAnswered || submitting}
-                          className="w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-                        >
-                          {submitting ? 'Mengirim jawaban...' : 'Kumpulkan Jawaban'}
-                        </button>
-                      ) : (
-                        <div
-                          className={`rounded-2xl border p-4 text-center ${
-                            quizResult?.passed
-                              ? 'border-emerald-300 bg-emerald-50'
-                              : 'border-red-300 bg-red-50'
-                          }`}
-                        >
-                          <p className={`font-bold ${quizResult?.passed ? 'text-emerald-700' : 'text-red-700'}`}>
-                            Skor kamu: {quizResult?.score}%
-                          </p>
-                          <p className={`mt-1 text-sm ${quizResult?.passed ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {quizResult?.message}
-                          </p>
+                        {isNotStartedYet || isExpired ? (
+                          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500 font-medium text-sm">
+                            {isNotStartedYet ? 'Soal kuis baru dapat dikerjakan setelah jadwal dibuka.' : 'Masa pengerjaan kuis untuk materi ini telah ditutup.'}
+                          </div>
+                        ) : quizLoading ? (
+                          <p className="text-sm text-slate-500">Menyiapkan soal...</p>
+                        ) : quizQuestions.length > 0 ? (
+                          <div className="space-y-5">
+                            {quizQuestions.map((q, idx) => {
+                              const selected = answers[q.id];
+                              const showFeedback = submitted;
 
-                          {!quizResult?.passed && (
-                            <button
-                              onClick={handleRetryQuiz}
-                              className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-red-300 px-5 py-2.5 text-sm font-bold text-red-700 hover:bg-red-100 transition-colors"
-                            >
-                              <RotateCcw size={14} />
-                              Coba Lagi
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500">Tidak ada soal tersedia saat ini.</p>
-                  )}
+                              return (
+                                <div key={q.id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                                  <p className="font-semibold text-slate-800 mb-3">
+                                    {idx + 1}. {q.pertanyaan}
+                                  </p>
+                                  <div className="grid gap-2 sm:grid-cols-2">
+                                    {q.options.map((option) => {
+                                      const isSelected = selected === option;
+                                      const isCorrectOption = option === q.correctAnswer;
+                                      const showCorrect = showFeedback && isCorrectOption;
+                                      const showWrong = showFeedback && isSelected && !isCorrectOption;
+
+                                      return (
+                                        <button
+                                          key={option}
+                                          type="button"
+                                          onClick={() => handleSelectAnswer(q.id, option)}
+                                          disabled={submitted && quizResult?.passed}
+                                          className={`flex items-center justify-between gap-2 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition-all ${
+                                            showCorrect
+                                              ? 'border-emerald-400 bg-emerald-50 text-emerald-700'
+                                              : showWrong
+                                              ? 'border-red-300 bg-red-50 text-red-700'
+                                              : isSelected
+                                              ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                                              : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50'
+                                          }`}
+                                        >
+                                          {option}
+                                          {showCorrect && <CheckCircle2 size={16} className="shrink-0" />}
+                                          {showWrong && <XCircle size={16} className="shrink-0" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {!submitted ? (
+                              <button
+                                onClick={handleSubmitQuiz}
+                                disabled={!allAnswered || submitting}
+                                className="w-full rounded-full bg-indigo-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                              >
+                                {submitting ? 'Mengirim jawaban...' : 'Kumpulkan Jawaban'}
+                              </button>
+                            ) : (
+                              <div
+                                className={`rounded-2xl border p-4 text-center ${
+                                  quizResult?.passed
+                                    ? 'border-emerald-300 bg-emerald-50'
+                                    : 'border-red-300 bg-red-50'
+                                }`}
+                              >
+                                <p className={`font-bold ${quizResult?.passed ? 'text-emerald-700' : 'text-red-700'}`}>
+                                  Skor kamu: {quizResult?.score}%
+                                </p>
+                                <p className={`mt-1 text-sm ${quizResult?.passed ? 'text-emerald-600' : 'text-red-600'}`}>
+                                  {quizResult?.message}
+                                </p>
+
+                                {!quizResult?.passed && (
+                                  <button
+                                    onClick={handleRetryQuiz}
+                                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-white border border-red-300 px-5 py-2.5 text-sm font-bold text-red-700 hover:bg-red-100 transition-colors"
+                                  >
+                                    <RotateCcw size={14} />
+                                    Coba Lagi
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">Tidak ada soal tersedia saat ini.</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </section>
               )}
 

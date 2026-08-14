@@ -73,6 +73,8 @@ export async function POST(request: Request) {
     const summary = formData.get('summary') as string | null;
     const deskripsi = formData.get('deskripsi') as string | null;
     const videoUrl = formData.get('videoUrl') as string | null;
+    const quizStartAt = formData.get('quizStartAt') as string | null;
+    const quizEndAt = formData.get('quizEndAt') as string | null;
     const imageFile = formData.get('image') as File | null;
 
     const finalJudul = judul || title;
@@ -80,6 +82,8 @@ export async function POST(request: Request) {
     const finalRingkasan = ringkasan || summary || deskripsi || null;
     const finalBab = bab || null;
     const finalVideoUrl = videoUrl || null;
+    const finalQuizStartAt = quizStartAt ? new Date(quizStartAt) : null;
+    const finalQuizEndAt = quizEndAt ? new Date(quizEndAt) : null;
 
     if (!finalJudul || !finalKonten) {
       return NextResponse.json(
@@ -123,6 +127,8 @@ export async function POST(request: Request) {
         kelas: kelas || null,
         videoUrl: finalVideoUrl,
         imageUrl: finalImageUrl,
+        quizStartAt: finalQuizStartAt,
+        quizEndAt: finalQuizEndAt,
       }
     });
 

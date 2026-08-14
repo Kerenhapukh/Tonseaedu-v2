@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video, Image as ImageIcon, Calendar, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -15,6 +15,8 @@ interface Materi {
   kelas?: string | null;
   videoUrl?: string | null;
   imageUrl?: string | null;
+  quizStartAt?: string | null;
+  quizEndAt?: string | null;
   category?: {
     id: number;
     name: string;
@@ -30,11 +32,25 @@ const normalizeKelas = (kelas?: string | null) => {
   return onlyNumber || 'umum';
 };
 
-// Mengubah link YouTube biasa (watch?v=, youtu.be/, shorts/) menjadi URL embed
-const getYoutubeEmbedUrl = (url?: string | null) => {
-  if (!url) return null;
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/);
-  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+const toDatetimeLocal = (dateStr?: string | null) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const formatQuizSchedule = (dateStr?: string | null) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d).replace('.', ':');
 };
 
 const inputBaseClass =
@@ -58,6 +74,8 @@ export default function AdminMateriPage() {
     ringkasan: '',
     content: '',
     videoUrl: '',
+    quizStartAt: '',
+    quizEndAt: '',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -121,6 +139,12 @@ export default function AdminMateriPage() {
     return groups;
   }, [materiList]);
 
+const getYoutubeEmbedUrl = (url?: string | null) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+};
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.kelas || !formData.bab || !formData.title || !formData.ringkasan || !formData.content) {
@@ -143,6 +167,8 @@ export default function AdminMateriPage() {
       dataToSend.append('bab', formData.bab);
       dataToSend.append('ringkasan', formData.ringkasan);
       if (formData.videoUrl) dataToSend.append('videoUrl', formData.videoUrl);
+      dataToSend.append('quizStartAt', formData.quizStartAt || '');
+      dataToSend.append('quizEndAt', formData.quizEndAt || '');
       if (imageFile) dataToSend.append('image', imageFile);
 
       const res = await fetch(url, {
@@ -151,8 +177,8 @@ export default function AdminMateriPage() {
       });
 
       if (res.ok) {
-        alert(isEditing ? 'Materi berhasil diperbarui!' : 'Materi berhasil ditambahkan!');
-        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+        alert(isEditing ? 'Materi & Jadwal Kuis berhasil diperbarui!' : 'Materi & Jadwal Kuis berhasil ditambahkan!');
+        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '', quizStartAt: '', quizEndAt: '' });
         handleImageChange(null);
         setShowForm(false);
         setIsEditing(false);
@@ -176,6 +202,8 @@ export default function AdminMateriPage() {
       ringkasan: materi.ringkasan || materi.content,
       content: materi.content,
       videoUrl: materi.videoUrl || '',
+      quizStartAt: toDatetimeLocal(materi.quizStartAt),
+      quizEndAt: toDatetimeLocal(materi.quizEndAt),
     });
     setImageFile(null);
     setImagePreview((prev) => {
@@ -191,7 +219,7 @@ export default function AdminMateriPage() {
   const resetForm = () => {
     setShowForm(!showForm);
     if (!showForm) {
-      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '', quizStartAt: '', quizEndAt: '' });
       handleImageChange(null);
       setIsEditing(false);
       setEditId(null);
@@ -217,6 +245,8 @@ export default function AdminMateriPage() {
 
   const renderMateriCard = (materi: Materi) => {
     const embedUrl = getYoutubeEmbedUrl(materi.videoUrl);
+    const startFormatted = formatQuizSchedule(materi.quizStartAt);
+    const endFormatted = formatQuizSchedule(materi.quizEndAt);
 
     return (
       <article key={materi.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
@@ -234,6 +264,20 @@ export default function AdminMateriPage() {
             </span>
           )}
         </div>
+
+        {(startFormatted || endFormatted) && (
+          <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs space-y-1">
+            <p className="font-bold text-blue-900 flex items-center gap-1">
+              <Clock size={12} className="text-blue-600" /> Jadwal Kuis:
+            </p>
+            {startFormatted && (
+              <p className="text-slate-700 font-medium">🗓️ <b>Dibuka:</b> {startFormatted}</p>
+            )}
+            {endFormatted && (
+              <p className="text-slate-700 font-medium">⏰ <b>Ditutup:</b> {endFormatted}</p>
+            )}
+          </div>
+        )}
 
         {materi.imageUrl && (
           <div className="mb-4 aspect-video overflow-hidden rounded-xl border border-slate-200">
@@ -473,6 +517,37 @@ export default function AdminMateriPage() {
                     />
                   </div>
                 )}
+              </div>
+
+              {/* Batas Waktu Kuis (Schedule) */}
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-5 space-y-4">
+                <div className="flex items-center gap-2 text-blue-900 font-extrabold text-sm">
+                  <Calendar size={18} className="text-blue-600" />
+                  Jadwal & Batas Waktu Pengerjaan Kuis <span className="text-xs font-semibold text-slate-500">(Opsional)</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-700">🗓️ Tanggal & Jam Dibuka</label>
+                    <input
+                      type="datetime-local"
+                      className={inputBaseClass}
+                      value={formData.quizStartAt}
+                      onChange={(e) => setFormData({ ...formData, quizStartAt: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-700">⏰ Tanggal & Jam Ditutup</label>
+                    <input
+                      type="datetime-local"
+                      className={inputBaseClass}
+                      value={formData.quizEndAt}
+                      onChange={(e) => setFormData({ ...formData, quizEndAt: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 italic">
+                  * Setelah tanggal ditutup lewat, siswa tidak bisa lagi membuka atau mengerjakan kuis pada materi ini.
+                </p>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

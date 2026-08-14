@@ -68,10 +68,30 @@ export async function GET(
       kelas: q.kelas,
     }));
 
+    const now = new Date();
+    let isQuizOpen = true;
+    let quizStatusMessage = 'Kuis Aktif';
+
+    if (materi.quizStartAt && now < new Date(materi.quizStartAt)) {
+      isQuizOpen = false;
+      quizStatusMessage = 'Kuis Belum Dibuka';
+    } else if (materi.quizEndAt && now > new Date(materi.quizEndAt)) {
+      isQuizOpen = false;
+      quizStatusMessage = 'Waktu Pengerjaan Kuis Telah Berakhir (Ditutup)';
+    }
+
     return NextResponse.json({
       success: true,
       source, // "materi" jika soal khusus, "kelas" jika fallback
-      materi: { id: materi.id, judul: materi.judul, kelas: materi.kelas },
+      materi: { 
+        id: materi.id, 
+        judul: materi.judul, 
+        kelas: materi.kelas,
+        quizStartAt: materi.quizStartAt,
+        quizEndAt: materi.quizEndAt,
+        isQuizOpen,
+        quizStatusMessage,
+      },
       data: formatted,
     });
   } catch (error) {
