@@ -149,6 +149,28 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
     };
   }, [loading, error, alreadyCompleted, progressLoaded, resolvedParams.id]);
 
+  // Bila timer membaca selesai (secondsLeft === 0), tandai materi sebagai diselesaikan di database
+  useEffect(() => {
+    if (secondsLeft === 0 && materi && username && !alreadyCompleted) {
+      const markCompleted = async () => {
+        try {
+          await fetch('/api/materi-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              materiId: materi.id,
+              quizScore: 100,
+            }),
+          });
+          setCompletedIds((prev) => new Set([...prev, materi.id]));
+        } catch (e) {
+          console.error('Gagal mencatat progress membaca materi:', e);
+        }
+      };
+      markCompleted();
+    }
+  }, [secondsLeft, materi, username, alreadyCompleted]);
+
   const siblingMateri = useMemo(() => {
     if (!materi) return [];
     const kelasKey = normalizeKelas(materi.kelas);

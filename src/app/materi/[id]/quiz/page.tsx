@@ -218,7 +218,7 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
             )}
 
             <p className="mt-4 text-slate-600">
-              Jawab {questions.length} soal. Nilai minimal <b>{PASSING_SCORE}%</b> untuk membuka materi berikutnya.
+              Jawab {questions.length} soal untuk menguji pemahaman kamu setelah membaca materi.
               Setiap soal punya waktu {SECONDS_PER_QUESTION} detik.
             </p>
 
@@ -241,18 +241,16 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
       <main className={wrap}>
         <div className="mx-auto max-w-md">
           <div className="p-8 md:p-10 bg-white rounded-[2rem] shadow-xl text-center border border-slate-200">
-            <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl ${lulus ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-              {lulus ? <CheckCircle2 size={34} /> : <XCircle size={34} />}
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+              <CheckCircle2 size={34} />
             </div>
             <h2 className="text-2xl font-black mb-1 text-slate-900">
-              {lulus ? "Lulus! 🎉" : "Belum Lulus"}
+              Kuis Selesai! 🎉
             </h2>
             <p className="text-slate-500 mb-6">
-              {lulus
-                ? "Materi berikutnya sudah terbuka."
-                : `Nilai minimal ${PASSING_SCORE} untuk lanjut. Coba lagi ya.`}
+              Terima kasih sudah mengerjakan kuis uji pemahaman materi ini.
             </p>
-            <div className={`text-7xl font-black mb-6 ${lulus ? "text-green-600" : "text-red-500"}`}>{percent}</div>
+            <div className="text-7xl font-black mb-6 text-green-600">{percent}%</div>
             <div className="flex justify-between bg-slate-50 p-4 rounded-2xl mb-8 text-sm font-medium">
               <div className="text-green-600">Benar: {score}</div>
               <div className="text-red-500">Salah: {questions.length - score}</div>

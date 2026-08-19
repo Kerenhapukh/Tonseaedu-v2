@@ -154,7 +154,7 @@ export default function UserMateriPage() {
               </h1>
 
               <p className="text-blue-100/90 leading-relaxed text-base md:text-lg max-w-2xl">
-                Pelajari materi bahasa Tonsea secara bertahap. Selesaikan kuis pada tiap materi dengan nilai minimal <span className="font-bold text-yellow-300">70%</span> untuk membuka materi berikutnya.
+                Pelajari materi bahasa Tonsea secara bertahap. Selesaikan waktu membaca pada tiap materi untuk membuka materi berikutnya.
               </p>
             </div>
 
@@ -342,7 +342,7 @@ export default function UserMateriPage() {
                                 <div className="rounded-2xl bg-amber-500/10 p-3.5 border border-amber-500/20">
                                   <p className="text-xs font-bold text-amber-800 flex items-center gap-2">
                                     <Lock size={14} className="shrink-0 text-amber-600" />
-                                    Selesaikan kuis materi sebelumnya (min. 70%) untuk membuka.
+                                    Selesaikan membaca materi sebelumnya untuk membuka.
                                   </p>
                                 </div>
                               )}

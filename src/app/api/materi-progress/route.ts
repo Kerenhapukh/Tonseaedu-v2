@@ -68,41 +68,35 @@ export async function POST(request: Request) {
 
     const numericMateriId = parseInt(String(materiId), 10);
     const numericScore = Math.round(Number(quizScore));
-    const lulus = numericScore >= PASSING_SCORE;
 
-    // Simpan / perbarui progress. Sekali "completed", tetap completed
-    // walau attempt berikutnya nilainya turun (biar materi tak terkunci lagi).
+    // Simpan / perbarui progress ke completed setelah membaca timer / mengerjakan kuis
     const existing = await prisma.materiProgress.findUnique({
       where: { userId_materiId: { userId: user.id, materiId: numericMateriId } },
     });
 
-    const alreadyCompleted = existing?.status === 'completed';
-    const finalStatus = alreadyCompleted || lulus ? 'completed' : 'locked';
+    const finalStatus = 'completed';
 
     const progress = await prisma.materiProgress.upsert({
       where: { userId_materiId: { userId: user.id, materiId: numericMateriId } },
       update: {
         status: finalStatus,
         quizScore: numericScore,
-        completedAt: finalStatus === 'completed' ? (existing?.completedAt ?? new Date()) : null,
+        completedAt: existing?.completedAt ?? new Date(),
       },
       create: {
         userId: user.id,
         materiId: numericMateriId,
         status: finalStatus,
         quizScore: numericScore,
-        completedAt: finalStatus === 'completed' ? new Date() : null,
+        completedAt: new Date(),
       },
     });
 
     return NextResponse.json({
       success: true,
-      passed: lulus,
-      passingScore: PASSING_SCORE,
+      passed: true,
       data: progress,
-      message: lulus
-        ? 'Selamat! Kamu lulus. Materi berikutnya terbuka.'
-        : `Nilai ${numericScore}. Minimal ${PASSING_SCORE} untuk membuka materi berikutnya. Coba lagi ya.`,
+      message: 'Materi berhasil diselesaikan!',
     });
   } catch (error) {
     console.error('Error POST materi-progress:', error);
