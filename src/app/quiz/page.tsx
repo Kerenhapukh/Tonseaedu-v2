@@ -182,7 +182,20 @@ export default function QuizPage() {
         }
         const materiRes = await fetch(materiUrl);
         const materiJson = await materiRes.json();
-        setMateriList(materiJson.data || []);
+        const list = (materiJson.data || []) as { id: number; judul: string; kelas?: string | null; quizStartAt?: string | null; quizEndAt?: string | null }[];
+        setMateriList(list);
+
+        // Otomatis pilih materi pertama yang statusnya Terbuka
+        const now = new Date();
+        const firstOpenMateri = list.find((m) => {
+          const notYet = m.quizStartAt ? now < new Date(m.quizStartAt) : false;
+          const expired = m.quizEndAt ? now > new Date(m.quizEndAt) : false;
+          return !notYet && !expired;
+        });
+
+        if (firstOpenMateri) {
+          handleMateriChange(firstOpenMateri.id.toString());
+        }
 
         const scoreRes = await fetch(`/api/scores?username=${encodeURIComponent(username)}`);
         const scoreData = await scoreRes.json();
@@ -219,7 +232,7 @@ export default function QuizPage() {
             onClick={() => setIsStarted(false)} 
             className="w-full bg-blue-600 text-white py-3.5 rounded-full font-black text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
           >
-            Kembali & Pilih Materi Lain
+            Kembali &amp; Pilih Materi Lain
           </button>
         </div>
       </main>
@@ -291,7 +304,7 @@ export default function QuizPage() {
                       const now = new Date();
                       const notYet = m.quizStartAt ? now < new Date(m.quizStartAt) : false;
                       const expired = m.quizEndAt ? now > new Date(m.quizEndAt) : false;
-                      const suffix = notYet ? ' (Belum Dibuka)' : expired ? ' (Ditutup)' : '';
+                      const suffix = notYet ? ' (Belum Dibuka)' : expired ? ' (Ditutup)' : ' (Terbuka)';
                       return (
                         <option key={m.id} value={m.id} className="text-slate-900 font-medium">
                           {m.judul}{suffix}
@@ -328,7 +341,11 @@ export default function QuizPage() {
                       {formatQuizSchedule(quizEndAt) && (
                         <p className="text-blue-100 font-semibold">⏰ <b>Ditutup:</b> {formatQuizSchedule(quizEndAt)}</p>
                       )}
-                      {!isQuizOpen && (
+                      {isQuizOpen ? (
+                        <div className="mt-2 rounded-xl bg-emerald-500/20 border border-emerald-300/40 p-2.5 text-emerald-100 font-bold text-xs flex items-center gap-2">
+                          <span>🟢</span> Status Kuis: Terbuka (Siap Dikerjakan)
+                        </div>
+                      ) : (
                         <div className="mt-2 rounded-xl bg-red-500/20 border border-red-300/40 p-3 text-red-100 font-bold text-xs flex items-center gap-2">
                           ⚠️ {quizStatusMessage || 'Kuis tidak dapat diakses saat ini.'}
                         </div>
