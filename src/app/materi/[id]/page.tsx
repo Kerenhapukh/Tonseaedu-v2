@@ -11,6 +11,9 @@ import {
   Clock3,
   Lock,
   CheckCircle2,
+  Maximize2,
+  X,
+  ZoomIn,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
@@ -68,10 +71,20 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
 
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [progressLoaded, setProgressLoaded] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Timer baca
   const [secondsLeft, setSecondsLeft] = useState(READ_TIMER_SECONDS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Esc key listener untuk menutup modal gambar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsImageModalOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Load data materi + daftar materi (untuk next/prev)
   useEffect(() => {
@@ -278,12 +291,22 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
               )}
 
               {materi.imageUrl ? (
-                <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 shadow-sm">
-                  <img
-                    src={materi.imageUrl}
-                    alt={materi.title}
-                    className="max-h-[420px] w-full object-cover"
-                  />
+                <section className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200 shadow-sm bg-slate-50/50">
+                  <div
+                    onClick={() => setIsImageModalOpen(true)}
+                    className="cursor-pointer relative overflow-hidden flex items-center justify-center w-full"
+                  >
+                    <img
+                      src={materi.imageUrl}
+                      alt={materi.title}
+                      className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-[1.005]"
+                    />
+                    {/* Floating Zoom Badge */}
+                    <div className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-slate-900/80 backdrop-blur-md px-4 py-2 text-xs font-bold text-white shadow-xl border border-white/20 transition-all group-hover:bg-blue-600 group-hover:scale-105">
+                      <ZoomIn size={15} className="text-cyan-300" />
+                      Klik untuk Perbesar Gambar Fullscreen
+                    </div>
+                  </div>
                 </section>
               ) : null}
 
@@ -366,6 +389,38 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
           </article>
         ) : null}
       </div>
+
+      {/* Fullscreen Image Lightbox Modal */}
+      {isImageModalOpen && materi?.imageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md p-4 sm:p-6 animate-in fade-in duration-200"
+          onClick={() => setIsImageModalOpen(false)}
+        >
+          {/* Tombol Close */}
+          <button
+            onClick={() => setIsImageModalOpen(false)}
+            className="absolute top-5 right-5 p-3 rounded-full bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:scale-110 transition-all z-10 shadow-2xl"
+            title="Tutup (Esc)"
+          >
+            <X size={24} />
+          </button>
+
+          <div
+            className="relative max-w-6xl max-h-[88vh] w-full flex flex-col items-center justify-center space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={materi.imageUrl}
+              alt={materi.title}
+              className="max-h-[80vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/15"
+            />
+            <div className="text-center pt-2">
+              <p className="text-white font-bold text-sm md:text-base">{materi.title}</p>
+              <p className="text-slate-400 text-xs mt-0.5">Tekan Esc atau klik di mana saja untuk menutup</p>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

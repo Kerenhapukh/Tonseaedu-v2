@@ -3,7 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trophy, ChevronRight, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Trophy, ChevronRight, RotateCcw, CheckCircle2, XCircle, Lock } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 interface QuizQuestion {
@@ -14,7 +14,7 @@ interface QuizQuestion {
 }
 
 const PASSING_SCORE = 70;
-const SECONDS_PER_QUESTION = 15;
+const SECONDS_PER_QUESTION = 30;
 
 const shuffle = <T,>(array: T[]): T[] => {
   const a = [...array];
@@ -121,6 +121,20 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
     }, 1000);
     return () => clearInterval(timer);
   }, [loading, showResult, isStarted, questions.length, nextQuestion]);
+
+  // Cegah keluar / refresh browser saat kuis sedang berlangsung
+  useEffect(() => {
+    if (!isStarted || showResult) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Kuis sedang berlangsung. Yakin ingin keluar?";
+      return e.returnValue;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isStarted, showResult]);
 
   // Simpan progress saat selesai
   useEffect(() => {
@@ -285,8 +299,34 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
   // Soal berjalan
   const q = questions[currentIndex];
   return (
-    <main className={wrap}>
-      <div className="max-w-2xl mx-auto">
+    <>
+      {/* Dynamic CSS untuk mengunci seluruh klik pada Navbar / Header global */}
+      <style jsx global>{`
+        header, nav {
+          pointer-events: none !important;
+          user-select: none !important;
+          filter: blur(1.5px) opacity(0.5);
+        }
+      `}</style>
+
+      {/* Top Lock Banner Overlay */}
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-950/95 backdrop-blur-xl border-b border-amber-500/30 shadow-2xl py-3 px-4 sm:px-8 flex items-center justify-between text-white animate-in slide-in-from-top-4 duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300">
+            <Lock size={18} />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-amber-300">Kuis Sedang Berlangsung</p>
+            <p className="text-xs text-slate-300 font-semibold hidden sm:block">Navigasi menu dikunci. Selesaikan kuis untuk membuka kembali navigasi.</p>
+          </div>
+        </div>
+        <div className="text-[11px] font-extrabold bg-white/10 px-3 py-1.5 rounded-full border border-white/20 text-blue-200">
+          🔒 Navigasi Dikunci
+        </div>
+      </div>
+
+      <main className={`${wrap} pt-14`}>
+        <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
             Soal {currentIndex + 1} / {questions.length}
@@ -323,5 +363,6 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
         </div>
       </div>
     </main>
+  </>
   );
 }

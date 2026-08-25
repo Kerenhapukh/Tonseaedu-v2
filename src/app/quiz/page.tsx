@@ -13,7 +13,8 @@ import {
   XCircle, 
   RotateCcw,
   BookOpen,
-  HelpCircle
+  HelpCircle,
+  Lock
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -110,7 +111,7 @@ export default function QuizPage() {
   };
   
   // State khusus Timer
-  const SECONDS_PER_QUESTION = 15;
+  const SECONDS_PER_QUESTION = 30;
   const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
   const kelasLabel = studentKelas ? `Kelas ${studentKelas.replace(/\D/g, '') || studentKelas}` : 'Semua Kelas';
 
@@ -170,6 +171,20 @@ export default function QuizPage() {
 
     return () => clearInterval(timer);
   }, [loading, showResult, questions.length, isStarted, nextQuestion]);
+
+  // Cegah keluar / refresh browser saat kuis sedang berlangsung
+  useEffect(() => {
+    if (!isStarted || showResult) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Kuis sedang berlangsung. Yakin ingin keluar?";
+      return e.returnValue;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isStarted, showResult]);
 
   useEffect(() => {
     if (!username) return;
@@ -412,7 +427,7 @@ export default function QuizPage() {
           <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200/90 shadow-sm text-center space-y-4">
             <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Siap Mulai Menguji Pemahaman?</h2>
             <p className="text-slate-500 text-sm max-w-md mx-auto font-medium">
-              Setiap soal memiliki batas waktu 15 detik. Pastikan kamu sudah memilih materi sebelum menekan tombol di bawah.
+              Setiap soal memiliki batas waktu 30 detik. Pastikan kamu sudah memilih materi sebelum menekan tombol di bawah.
             </p>
 
             <div className="pt-2">
@@ -491,8 +506,34 @@ export default function QuizPage() {
   const currentQuestion = questions[currentIndex];
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] py-10 px-4 md:px-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <>
+      {/* Dynamic CSS untuk mengunci seluruh klik pada Navbar / Header global */}
+      <style jsx global>{`
+        header, nav {
+          pointer-events: none !important;
+          user-select: none !important;
+          filter: blur(1.5px) opacity(0.5);
+        }
+      `}</style>
+
+      {/* Top Lock Banner Overlay */}
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-slate-950/95 backdrop-blur-xl border-b border-amber-500/30 shadow-2xl py-3 px-4 sm:px-8 flex items-center justify-between text-white animate-in slide-in-from-top-4 duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-300">
+            <Lock size={18} />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-amber-300">Kuis Sedang Berlangsung</p>
+            <p className="text-xs text-slate-300 font-semibold hidden sm:block">Navigasi menu dikunci. Selesaikan kuis untuk membuka kembali navigasi.</p>
+          </div>
+        </div>
+        <div className="text-[11px] font-extrabold bg-white/10 px-3 py-1.5 rounded-full border border-white/20 text-blue-200">
+          🔒 Navigasi Dikunci
+        </div>
+      </div>
+
+      <main className="min-h-screen bg-[linear-gradient(180deg,#F8FAFF_0%,#EEF4FF_50%,#FFFFFF_100%)] pt-14 pb-10 px-4 md:px-8">
+        <div className="max-w-2xl mx-auto space-y-6">
         
         {/* Top Header Card */}
         <div className="bg-white/90 backdrop-blur-md p-6 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-4">
@@ -553,5 +594,6 @@ export default function QuizPage() {
 
       </div>
     </main>
+  </>
   );
 }
