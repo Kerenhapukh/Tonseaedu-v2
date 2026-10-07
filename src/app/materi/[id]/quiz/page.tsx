@@ -14,7 +14,7 @@ interface QuizQuestion {
 }
 
 const PASSING_SCORE = 70;
-const SECONDS_PER_QUESTION = 30;
+const DEFAULT_SECONDS_PER_QUESTION = 30;
 
 const shuffle = <T,>(array: T[]): T[] => {
   const a = [...array];
@@ -51,7 +51,8 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
+  const [secondsPerQuestion, setSecondsPerQuestion] = useState(DEFAULT_SECONDS_PER_QUESTION);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_SECONDS_PER_QUESTION);
   const [materiJudul, setMateriJudul] = useState<string>("");
   const [quizStartAt, setQuizStartAt] = useState<string | null>(null);
   const [quizEndAt, setQuizEndAt] = useState<string | null>(null);
@@ -67,13 +68,13 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
     setCurrentIndex((idx) => {
       const next = idx + 1;
       if (next < questions.length) {
-        setTimeLeft(SECONDS_PER_QUESTION);
+        setTimeLeft(secondsPerQuestion);
         return next;
       }
       setShowResult(true);
       return idx;
     });
-  }, [questions.length]);
+  }, [questions.length, secondsPerQuestion]);
 
   const handleAnswer = (option: string) => {
     if (option === questions[currentIndex].correct_answer) {
@@ -94,6 +95,10 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
         if (data?.materi?.quizEndAt) setQuizEndAt(data.materi.quizEndAt);
         if (typeof data?.materi?.isQuizOpen === 'boolean') setIsQuizOpen(data.materi.isQuizOpen);
         if (data?.materi?.quizStatusMessage) setQuizStatusMessage(data.materi.quizStatusMessage);
+        if (data?.materi?.quizDurationSeconds) {
+          setSecondsPerQuestion(data.materi.quizDurationSeconds);
+          setTimeLeft(data.materi.quizDurationSeconds);
+        }
 
         const qs = (data.data || []) as QuizQuestion[];
         const randomized = shuffle(qs).map((q) => ({ ...q, options: shuffle(q.options || []) }));
@@ -114,13 +119,13 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
       setTimeLeft((prev) => {
         if (prev <= 1) {
           nextQuestion();
-          return SECONDS_PER_QUESTION;
+          return secondsPerQuestion;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [loading, showResult, isStarted, questions.length, nextQuestion]);
+  }, [loading, showResult, isStarted, questions.length, nextQuestion, secondsPerQuestion]);
 
   // Cegah keluar / refresh browser saat kuis sedang berlangsung
   useEffect(() => {
@@ -233,7 +238,7 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
 
             <p className="mt-4 text-slate-600">
               Jawab {questions.length} soal untuk menguji pemahaman kamu setelah membaca materi.
-              Setiap soal punya waktu {SECONDS_PER_QUESTION} detik.
+              Setiap soal punya waktu {secondsPerQuestion} detik.
             </p>
 
             <button
@@ -339,7 +344,7 @@ export default function MateriQuizPage({ params }: { params: Promise<{ id: strin
         <div className="w-full bg-slate-100 h-3 rounded-full mb-10 overflow-hidden">
           <div
             className="bg-blue-500 h-full transition-all duration-1000 ease-linear"
-            style={{ width: `${(timeLeft / SECONDS_PER_QUESTION) * 100}%` }}
+            style={{ width: `${(timeLeft / secondsPerQuestion) * 100}%` }}
           />
         </div>
 

@@ -28,6 +28,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         ringkasan: materi.ringkasan,
         videoUrl: materi.videoUrl,
         imageUrl: materi.imageUrl,
+        readTimerSeconds: materi.readTimerSeconds ?? 120,
       },
     });
   } catch (error) {
@@ -55,6 +56,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const videoUrl = formData.get('videoUrl') as string | null;
     const quizStartAt = formData.get('quizStartAt') as string | null;
     const quizEndAt = formData.get('quizEndAt') as string | null;
+    const quizDurationSeconds = formData.get('quizDurationSeconds') as string | null;
+    const readTimerSeconds = formData.get('readTimerSeconds') as string | null;
     const imageFile = formData.get('image') as File | null;
     const { id } = await params;
 
@@ -65,6 +68,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const finalVideoUrl = videoUrl || null;
     const finalQuizStartAt = quizStartAt !== null ? (quizStartAt ? new Date(quizStartAt) : null) : undefined;
     const finalQuizEndAt = quizEndAt !== null ? (quizEndAt ? new Date(quizEndAt) : null) : undefined;
+    const finalQuizDurationSeconds = quizDurationSeconds !== null ? (quizDurationSeconds ? parseInt(quizDurationSeconds, 10) : null) : undefined;
+    const finalReadTimerSeconds = readTimerSeconds !== null ? (readTimerSeconds ? parseInt(readTimerSeconds, 10) : 120) : undefined;
 
     if (!finalJudul || !finalKonten) {
        return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
@@ -104,6 +109,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         imageUrl: finalImageUrl,
         ...(finalQuizStartAt !== undefined && { quizStartAt: finalQuizStartAt }),
         ...(finalQuizEndAt !== undefined && { quizEndAt: finalQuizEndAt }),
+        ...(finalQuizDurationSeconds !== undefined && { quizDurationSeconds: finalQuizDurationSeconds }),
+        ...(finalReadTimerSeconds !== undefined && { readTimerSeconds: finalReadTimerSeconds }),
       },
     });
 

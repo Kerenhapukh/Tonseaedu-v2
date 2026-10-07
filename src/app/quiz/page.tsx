@@ -25,6 +25,8 @@ interface QuizQuestion {
   options: string[];
 }
 
+const DEFAULT_SECONDS_PER_QUESTION = 30;
+
 const formatQuizSchedule = (dateStr?: string | null) => {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -73,6 +75,7 @@ export default function QuizPage() {
   const [quizEndAt, setQuizEndAt] = useState<string | null>(null);
   const [isQuizOpen, setIsQuizOpen] = useState<boolean>(true);
   const [quizStatusMessage, setQuizStatusMessage] = useState<string>("");
+  const [secondsPerQuestion, setSecondsPerQuestion] = useState(DEFAULT_SECONDS_PER_QUESTION);
 
   const handleMateriChange = async (materiIdStr: string) => {
     setSelectedMateriId(materiIdStr);
@@ -80,6 +83,7 @@ export default function QuizPage() {
     setQuizEndAt(null);
     setIsQuizOpen(true);
     setQuizStatusMessage("");
+    setSecondsPerQuestion(DEFAULT_SECONDS_PER_QUESTION);
 
     if (!materiIdStr) {
       setQuestions([]);
@@ -95,6 +99,10 @@ export default function QuizPage() {
       if (data?.materi?.quizEndAt) setQuizEndAt(data.materi.quizEndAt);
       if (typeof data?.materi?.isQuizOpen === 'boolean') setIsQuizOpen(data.materi.isQuizOpen);
       if (data?.materi?.quizStatusMessage) setQuizStatusMessage(data.materi.quizStatusMessage);
+      if (data?.materi?.quizDurationSeconds) {
+        setSecondsPerQuestion(data.materi.quizDurationSeconds);
+        setTimeLeft(data.materi.quizDurationSeconds);
+      }
 
       const quizQuestions = (data.data || data) as QuizQuestion[];
       const randomized = shuffle(quizQuestions).map((q) => ({
@@ -111,8 +119,7 @@ export default function QuizPage() {
   };
   
   // State khusus Timer
-  const SECONDS_PER_QUESTION = 30;
-  const [timeLeft, setTimeLeft] = useState(SECONDS_PER_QUESTION);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_SECONDS_PER_QUESTION);
   const kelasLabel = studentKelas ? `Kelas ${studentKelas.replace(/\D/g, '') || studentKelas}` : 'Semua Kelas';
 
   // Fungsi untuk pindah soal (dibungkus useCallback agar stabil)
@@ -120,11 +127,11 @@ export default function QuizPage() {
     const nextIndex = currentIndex + 1;
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
-      setTimeLeft(SECONDS_PER_QUESTION); // Reset timer untuk soal baru
+      setTimeLeft(secondsPerQuestion); // Reset timer untuk soal baru
     } else {
       setShowResult(true);
     }
-  }, [currentIndex, questions.length]);
+  }, [currentIndex, questions.length, secondsPerQuestion]);
 
   const handleAnswer = (selectedOption: string | null) => {
     if (selectedOption === questions[currentIndex].correct_answer) {
@@ -163,14 +170,14 @@ export default function QuizPage() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           nextQuestion(); // Otomatis pindah soal jika waktu habis
-          return SECONDS_PER_QUESTION;
+          return secondsPerQuestion;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [loading, showResult, questions.length, isStarted, nextQuestion]);
+  }, [loading, showResult, questions.length, isStarted, nextQuestion, secondsPerQuestion]);
 
   // Cegah keluar / refresh browser saat kuis sedang berlangsung
   useEffect(() => {
@@ -427,7 +434,7 @@ export default function QuizPage() {
           <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200/90 shadow-sm text-center space-y-4">
             <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Siap Mulai Menguji Pemahaman?</h2>
             <p className="text-slate-500 text-sm max-w-md mx-auto font-medium">
-              Setiap soal memiliki batas waktu 30 detik. Pastikan kamu sudah memilih materi sebelum menekan tombol di bawah.
+              Setiap soal memiliki batas waktu {secondsPerQuestion} detik. Pastikan kamu sudah memilih materi sebelum menekan tombol di bawah.
             </p>
 
             <div className="pt-2">
@@ -559,7 +566,7 @@ export default function QuizPage() {
               className={`h-full rounded-full transition-all duration-1000 ease-linear ${
                 timeLeft <= 5 ? 'bg-gradient-to-r from-red-500 to-amber-500' : 'bg-gradient-to-r from-blue-600 to-indigo-600'
               }`} 
-              style={{ width: `${(timeLeft / SECONDS_PER_QUESTION) * 100}%` }}
+              style={{ width: `${(timeLeft / secondsPerQuestion) * 100}%` }}
             />
           </div>
         </div>

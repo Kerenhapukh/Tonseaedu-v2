@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, BookOpen, Pencil, Plus, Trash2, PlayCircle, Layers, Type, FileText, Video, Image as ImageIcon, Clock3 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -15,6 +15,7 @@ interface Materi {
   kelas?: string | null;
   videoUrl?: string | null;
   imageUrl?: string | null;
+  readTimerSeconds?: number | null;
   category?: {
     id: number;
     name: string;
@@ -51,6 +52,7 @@ export default function AdminMateriPage() {
     ringkasan: '',
     content: '',
     videoUrl: '',
+    readTimerSeconds: '120',
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -141,6 +143,7 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
       dataToSend.append('kelas', formData.kelas);
       dataToSend.append('bab', formData.bab);
       dataToSend.append('ringkasan', formData.ringkasan);
+      dataToSend.append('readTimerSeconds', formData.readTimerSeconds || '120');
       if (formData.videoUrl) dataToSend.append('videoUrl', formData.videoUrl);
       if (imageFile) dataToSend.append('image', imageFile);
 
@@ -151,7 +154,7 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
 
       if (res.ok) {
         alert(isEditing ? 'Materi berhasil diperbarui!' : 'Materi berhasil ditambahkan!');
-        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+        setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '', readTimerSeconds: '120' });
         handleImageChange(null);
         setShowForm(false);
         setIsEditing(false);
@@ -175,6 +178,7 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
       ringkasan: materi.ringkasan || materi.content,
       content: materi.content,
       videoUrl: materi.videoUrl || '',
+      readTimerSeconds: materi.readTimerSeconds ? String(materi.readTimerSeconds) : '120',
     });
     setImageFile(null);
     setImagePreview((prev) => {
@@ -190,7 +194,7 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
   const resetForm = () => {
     setShowForm(!showForm);
     if (!showForm) {
-      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '' });
+      setFormData({ kelas: '', bab: '', title: '', ringkasan: '', content: '', videoUrl: '', readTimerSeconds: '120' });
       handleImageChange(null);
       setIsEditing(false);
       setEditId(null);
@@ -225,6 +229,10 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
           </span>
           <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
             {materi.bab || 'BAB belum diisi'}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+            <Clock3 size={12} />
+            Timer: {materi.readTimerSeconds ?? 120}s ({Math.floor((materi.readTimerSeconds ?? 120) / 60)}m {(materi.readTimerSeconds ?? 120) % 60}s)
           </span>
           {embedUrl && (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
@@ -400,6 +408,31 @@ const getYoutubeEmbedUrl = (url?: string | null) => {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
+              </div>
+
+              <div>
+                <label className="mb-1.5 flex items-center justify-between text-sm font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5">
+                    <Clock3 size={14} className="text-amber-500" /> Timer Waktu Membaca Wajib Siswa (Detik)
+                  </span>
+                  {formData.readTimerSeconds && (
+                    <span className="text-xs font-extrabold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      = {Math.floor(Number(formData.readTimerSeconds) / 60)} menit {Number(formData.readTimerSeconds) % 60} detik
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="number"
+                  min="5"
+                  max="3600"
+                  className={inputBaseClass}
+                  placeholder="120"
+                  value={formData.readTimerSeconds}
+                  onChange={(e) => setFormData({ ...formData, readTimerSeconds: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-slate-500 font-medium">
+                  Atur berapa detik siswa wajib membaca materi sebelum tombol materi berikutnya / kuis terbuka. Default: <b>120 detik</b> (2 menit).
+                </p>
               </div>
 
               <div>

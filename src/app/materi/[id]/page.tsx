@@ -26,6 +26,7 @@ interface Materi {
   kelas?: string | null;
   videoUrl?: string | null;
   imageUrl?: string | null;
+  readTimerSeconds?: number | null;
   createdAt?: string;
   category?: {
     id: number;
@@ -138,10 +139,12 @@ export default function MateriDetailPage({ params }: { params: Promise<{ id: str
 
   const alreadyCompleted = materi ? completedIds.has(materi.id) : false;
 
-  // Reset timer baca setiap kali pindah materi
+  // Reset timer baca setiap kali data materi dimuat
   useEffect(() => {
-    setSecondsLeft(READ_TIMER_SECONDS);
-  }, [resolvedParams.id]);
+    if (materi) {
+      setSecondsLeft(materi.readTimerSeconds ?? 120);
+    }
+  }, [materi]);
 
   // Jalankan countdown timer baca (hanya kalau belum lulus sebelumnya)
   useEffect(() => {

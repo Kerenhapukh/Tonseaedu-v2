@@ -54,6 +54,8 @@ model Materi {
   sequence   Int              @default(0)
   quizStartAt  DateTime?
   quizEndAt    DateTime?
+  quizDurationSeconds Int?
+  readTimerSeconds    Int?       @default(120)
   category   Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   progress   MateriProgress[]
   questions  Question[]

@@ -44,6 +44,7 @@ export async function GET(request: Request) {
       ringkasan: m.ringkasan,
       videoUrl: m.videoUrl,
       imageUrl: m.imageUrl,
+      readTimerSeconds: m.readTimerSeconds ?? 120,
     }));
 
     return NextResponse.json({ success: true, data: formattedMateri });
@@ -75,6 +76,8 @@ export async function POST(request: Request) {
     const videoUrl = formData.get('videoUrl') as string | null;
     const quizStartAt = formData.get('quizStartAt') as string | null;
     const quizEndAt = formData.get('quizEndAt') as string | null;
+    const quizDurationSeconds = formData.get('quizDurationSeconds') as string | null;
+    const readTimerSeconds = formData.get('readTimerSeconds') as string | null;
     const imageFile = formData.get('image') as File | null;
 
     const finalJudul = judul || title;
@@ -84,6 +87,8 @@ export async function POST(request: Request) {
     const finalVideoUrl = videoUrl || null;
     const finalQuizStartAt = quizStartAt ? new Date(quizStartAt) : null;
     const finalQuizEndAt = quizEndAt ? new Date(quizEndAt) : null;
+    const finalQuizDurationSeconds = quizDurationSeconds ? parseInt(quizDurationSeconds, 10) : null;
+    const finalReadTimerSeconds = readTimerSeconds ? parseInt(readTimerSeconds, 10) : 120;
 
     if (!finalJudul || !finalKonten) {
       return NextResponse.json(
@@ -129,6 +134,8 @@ export async function POST(request: Request) {
         imageUrl: finalImageUrl,
         quizStartAt: finalQuizStartAt,
         quizEndAt: finalQuizEndAt,
+        quizDurationSeconds: finalQuizDurationSeconds,
+        readTimerSeconds: finalReadTimerSeconds,
       }
     });
 

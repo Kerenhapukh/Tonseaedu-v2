@@ -83,12 +83,13 @@ export async function GET(
     return NextResponse.json({
       success: true,
       source, // "materi" jika soal khusus, "kelas" jika fallback
-      materi: { 
-        id: materi.id, 
-        judul: materi.judul, 
+      materi: {
+        id: materi.id,
+        judul: materi.judul,
         kelas: materi.kelas,
         quizStartAt: materi.quizStartAt,
         quizEndAt: materi.quizEndAt,
+        quizDurationSeconds: materi.quizDurationSeconds,
         isQuizOpen,
         quizStatusMessage,
       },

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, BookOpen, Plus, Clock, Pencil, CheckCircle2, XCircle, Lock, X } from 'lucide-react';
+import { ArrowLeft, BookOpen, Plus, Clock, Timer, Pencil, CheckCircle2, XCircle, Lock, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -25,6 +25,7 @@ interface Question {
     bab?: string | null;
     quizStartAt?: string | null;
     quizEndAt?: string | null;
+    quizDurationSeconds?: number | null;
   };
 }
 
@@ -34,7 +35,10 @@ interface ScheduleTarget {
   title: string;
   quizStartAt?: string | null;
   quizEndAt?: string | null;
+  quizDurationSeconds?: number | null;
 }
+
+const DEFAULT_QUIZ_DURATION_SECONDS = 30;
 
 interface QuestionGroup {
   key: string;
@@ -90,6 +94,7 @@ export default function AdminQuestionsPage() {
   const [editingTarget, setEditingTarget] = useState<ScheduleTarget | null>(null);
   const [quizStartAtInput, setQuizStartAtInput] = useState('');
   const [quizEndAtInput, setQuizEndAtInput] = useState('');
+  const [quizDurationInput, setQuizDurationInput] = useState(String(DEFAULT_QUIZ_DURATION_SECONDS));
   const [savingSchedule, setSavingSchedule] = useState(false);
 
   // Satukan kuis per materi (atau per kategori jika belum terhubung ke materi manapun)
@@ -100,7 +105,7 @@ export default function AdminQuestionsPage() {
       const key = q.materi ? `materi-${q.materi.id}` : `kategori-${q.category?.id ?? 'umum'}`;
       if (!map.has(key)) {
         const scheduleTarget: ScheduleTarget | null = q.materi
-          ? { type: 'materi', id: q.materi.id, title: q.materi.judul, quizStartAt: q.materi.quizStartAt, quizEndAt: q.materi.quizEndAt }
+          ? { type: 'materi', id: q.materi.id, title: q.materi.judul, quizStartAt: q.materi.quizStartAt, quizEndAt: q.materi.quizEndAt, quizDurationSeconds: q.materi.quizDurationSeconds }
           : q.category
           ? { type: 'category', id: q.category.id, title: q.category.name, quizStartAt: q.category.quizStartAt, quizEndAt: q.category.quizEndAt }
           : null;
@@ -175,6 +180,7 @@ export default function AdminQuestionsPage() {
     setEditingTarget(target);
     setQuizStartAtInput(toDatetimeLocal(target.quizStartAt));
     setQuizEndAtInput(toDatetimeLocal(target.quizEndAt));
+    setQuizDurationInput(String(target.quizDurationSeconds || DEFAULT_QUIZ_DURATION_SECONDS));
   };
 
   const handleSaveSchedule = async (e: React.FormEvent) => {
@@ -190,6 +196,7 @@ export default function AdminQuestionsPage() {
         formData.append('content', 'placeholder');
         formData.append('quizStartAt', quizStartAtInput || '');
         formData.append('quizEndAt', quizEndAtInput || '');
+        formData.append('quizDurationSeconds', quizDurationInput || '');
         res = await fetch(`/api/materi/${editingTarget.id}`, {
           method: 'PUT',
           body: formData,
@@ -311,6 +318,11 @@ export default function AdminQuestionsPage() {
                         <span className="text-slate-600 font-medium">
                           ⏰ <b>Ditutup:</b> {endFormatted || <span className="text-slate-400 italic">Tanpa Batas</span>}
                         </span>
+                        {group.scheduleTarget.type === 'materi' && (
+                          <span className="text-slate-600 font-medium">
+                            ⏱️ <b>Waktu per Soal:</b> {group.scheduleTarget.quizDurationSeconds || DEFAULT_QUIZ_DURATION_SECONDS} detik
+                          </span>
+                        )}
                         <button
                           onClick={() => handleOpenScheduleModal(group.scheduleTarget!)}
                           className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline"
@@ -386,7 +398,9 @@ export default function AdminQuestionsPage() {
                 <Clock size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-950">Atur Batas Waktu Kuis</h3>
+                <h3 className="text-xl font-black text-slate-950">
+                  {editingTarget.type === 'materi' ? 'Atur Jadwal & Waktu Kuis' : 'Atur Batas Waktu Kuis'}
+                </h3>
                 <p className="text-xs text-slate-500 font-semibold">
                   {editingTarget.type === 'materi' ? 'Materi' : 'Kategori'}: {editingTarget.title}
                 </p>
@@ -423,6 +437,26 @@ export default function AdminQuestionsPage() {
                   Setelah jam tersebut, kuis otomatis terkunci dan tidak bisa lagi dikerjakan siswa.
                 </p>
               </div>
+
+              {editingTarget.type === 'materi' && (
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 mb-1.5">
+                    <Timer size={14} className="text-blue-600" />
+                    ⏱️ Waktu per Soal (detik)
+                  </label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={300}
+                    className={inputBaseClass}
+                    value={quizDurationInput}
+                    onChange={(e) => setQuizDurationInput(e.target.value)}
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1 italic">
+                    Lama waktu yang diberikan untuk menjawab setiap soal saat siswa mengerjakan kuis materi ini. Default: {DEFAULT_QUIZ_DURATION_SECONDS} detik.
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
