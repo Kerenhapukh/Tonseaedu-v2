@@ -11,15 +11,25 @@ import prisma from '@/lib/prisma';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { id } = await params;
-    const categoryId = parseInt(id, 10);
+    const { slug } = await params;
+    let categoryId = parseInt(slug, 10);
     const { searchParams } = new URL(request.url);
     const kelasSiswa = searchParams.get('kelas');
 
     if (Number.isNaN(categoryId)) {
+      const category = await prisma.category.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+      if (category) {
+        categoryId = category.id;
+      }
+    }
+
+    if (Number.isNaN(categoryId) || !categoryId) {
       return NextResponse.json(
         { error: 'ID kategori tidak valid' },
         { status: 400 }
