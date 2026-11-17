@@ -33,18 +33,7 @@ export default function AdminGuruPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (session?.user?.role !== "admin") {
-      router.replace("/login");
-      return;
-    }
-
-    fetchGurus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, session, router]);
-
-  const fetchGurus = async () => {
+  const refreshGurus = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users");
@@ -59,6 +48,35 @@ export default function AdminGuruPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (session?.user?.role !== "admin") {
+      router.replace("/login");
+      return;
+    }
+
+    let active = true;
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        const adminUsers = Array.isArray(data)
+          ? data.filter((user: Guru) => user.role === "admin" || user.role === "guru")
+          : [];
+        setGurus(adminUsers);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error(err);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [status, session, router]);
 
   const handleOpenForm = (guru: Guru | null = null) => {
     setErrorMsg("");
@@ -111,7 +129,7 @@ export default function AdminGuruPage() {
       setIsFormOpen(false);
       setFormData(emptyForm);
       setEditId(null);
-      await fetchGurus();
+      await refreshGurus();
     } catch (error: any) {
       setErrorMsg(error.message);
     } finally {
@@ -125,7 +143,7 @@ export default function AdminGuruPage() {
     try {
       const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
       if (res.ok) {
-        await fetchGurus();
+        await refreshGurus();
       }
     } catch (error) {
       console.error(error);

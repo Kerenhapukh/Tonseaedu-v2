@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, LogOut, Settings2, ShieldCheck, Users } from "lucide-react";
+import { BookOpen, GraduationCap, LogOut, Settings2, ShieldCheck, Users } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 const adminModules = [
   {
-    href: "/admin/kosakata",
-    icon: BookOpen,
-    title: "Kelola Kosakata",
-    description: "Tambah, ubah, dan hapus kosakata beserta audio pelafalan.",
-    accent: "from-blue-600 to-cyan-500",
+    href: "/admin/students",
+    icon: GraduationCap,
+    title: "Kelola Siswa",
+    description: "Tambah, ubah, dan hapus akun siswa serta atur kelas pembelajaran.",
+    accent: "from-blue-600 to-indigo-600",
   },
   {
     href: "/admin/guru",
@@ -20,6 +20,13 @@ const adminModules = [
     title: "Kelola Guru",
     description: "Atur akun admin/guru yang punya akses ke sistem.",
     accent: "from-slate-900 to-slate-700",
+  },
+  {
+    href: "/admin/kosakata",
+    icon: BookOpen,
+    title: "Kelola Kosakata",
+    description: "Tambah, ubah, dan hapus kosakata beserta audio pelafalan.",
+    accent: "from-emerald-600 to-teal-500",
   },
 ];
 
@@ -68,7 +75,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="p-8 lg:p-10">
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {adminModules.map((module) => {
                 const Icon = module.icon;
                 return (

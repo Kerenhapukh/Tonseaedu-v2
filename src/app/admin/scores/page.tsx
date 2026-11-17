@@ -27,19 +27,7 @@ export default function RekapNilaiPage() {
   const role = session?.user?.role ?? '';
   const isGuru = role.toLowerCase() === 'guru';
 
-  useEffect(() => {
-    if (status === 'loading') return;
-    const isPrivileged = role === 'admin' || role === 'guru';
-    if (!isPrivileged) {
-      router.replace('/login');
-      return;
-    }
-
-    fetchScores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, role, kelasFilter, router]);
-
-  const fetchScores = async () => {
+  const refreshScores = async () => {
     setLoading(true);
     try {
       const query = kelasFilter !== 'Semua' ? `?kelas=${kelasFilter}` : '';
@@ -54,6 +42,36 @@ export default function RekapNilaiPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === 'loading') return;
+    const isPrivileged = role === 'admin' || role === 'guru';
+    if (!isPrivileged) {
+      router.replace('/login');
+      return;
+    }
+
+    let active = true;
+    const query = kelasFilter !== 'Semua' ? `?kelas=${kelasFilter}` : '';
+    fetch(`/api/admin/scores${query}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (!active) return;
+        if (json.success) {
+          setScores(json.data);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error("Gagal mengambil rekap nilai:", err);
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [status, role, kelasFilter, router]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

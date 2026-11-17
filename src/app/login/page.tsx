@@ -14,6 +14,7 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"admin" | "guru" | "siswa">("siswa");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const initialRole = searchParams.get("role");
@@ -30,6 +31,7 @@ function LoginContent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage("");
     setLoading(true);
 
     try {
@@ -41,21 +43,30 @@ function LoginContent() {
       });
 
       if (result?.error) {
-        alert(result.code || "Terjadi kesalahan.");
+        let msg = "Email/username atau kata sandi tidak sesuai.";
+        if (result.code === "Akun tidak ditemukan") {
+          msg = "Akun tidak ditemukan. Pastikan email atau username Anda benar.";
+        } else if (result.code === "Password salah") {
+          msg = "Kata sandi yang Anda masukkan salah. Silakan coba lagi.";
+        }
+        setErrorMessage(msg);
         return;
       }
 
-      // Hard navigation: memastikan halaman tujuan mengambil session yang baru
-      // dari server, bukan cache useSession() lama sebelum login.
-      window.location.href = role === "siswa" ? "/materi" : role === "guru" ? "/guru" : "/admin";
-    } catch (error: any) {
-      alert(error.message || "Terjadi kesalahan.");
+      // Ambil session terbaru untuk menentukan redirect berdasarkan role akun yang sebenarnya
+      const sessionRes = await fetch("/api/auth/session");
+      const sessionData = await sessionRes.json();
+      const actualRole = sessionData?.user?.role || role;
+      window.location.href = actualRole === "admin" ? "/admin" : actualRole === "guru" ? "/guru" : "/materi";
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "Terjadi kesalahan saat masuk.");
     } finally {
       setLoading(false);
     }
   };
 
   const roleLabel = role === "siswa" ? "Siswa" : role === "guru" ? "Guru" : "Admin";
+  void roleLabel;
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -90,7 +101,7 @@ function LoginContent() {
           <div className="mb-6 grid grid-cols-3 rounded-2xl bg-slate-100 p-1 gap-1">
             <button
               type="button"
-              onClick={() => setRole("admin")}
+              onClick={() => { setRole("admin"); setErrorMessage(""); }}
               className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "admin" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
@@ -100,7 +111,7 @@ function LoginContent() {
             </button>
             <button
               type="button"
-              onClick={() => setRole("guru")}
+              onClick={() => { setRole("guru"); setErrorMessage(""); }}
               className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "guru" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
@@ -110,7 +121,7 @@ function LoginContent() {
             </button>
             <button
               type="button"
-              onClick={() => setRole("siswa")}
+              onClick={() => { setRole("siswa"); setErrorMessage(""); }}
               className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all ${
                 role === "siswa" ? "bg-slate-950 text-white shadow-md" : "text-slate-500 hover:text-slate-800"
               }`}
@@ -119,6 +130,12 @@ function LoginContent() {
               Siswa
             </button>
           </div>
+
+          {errorMessage && (
+            <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs sm:text-sm font-semibold text-red-700 animate-in fade-in">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
@@ -137,7 +154,10 @@ function LoginContent() {
                 }
                 className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all text-slate-950 font-bold placeholder:text-slate-400"
                 value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                onChange={(e) => {
+                  setIdentifier(e.target.value);
+                  if (errorMessage) setErrorMessage("");
+                }}
               />
             </div>
 
@@ -152,7 +172,10 @@ function LoginContent() {
                   placeholder={role === "siswa" ? "Masukkan kata sandi siswa..." : "Masukkan kata sandi akun..."}
                   className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all text-slate-950 font-bold placeholder:text-slate-400"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errorMessage) setErrorMessage("");
+                  }}
                 />
                 <button
                   type="button"

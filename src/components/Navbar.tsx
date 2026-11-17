@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Volume2, PlayCircle, Trophy, LogOut } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
@@ -12,9 +12,11 @@ export default function Navbar() {
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setIsProfileOpen(false);
-  }, [pathname]);
+  }
 
   const username = session?.user?.username ?? null;
   const userKelas = useMemo(() => {

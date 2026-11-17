@@ -3,31 +3,37 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { requireRole } from "@/lib/apiAuth";
 
-export async function GET() {
-  const { session, response } = await requireRole(["admin", "guru"]);
+export async function GET(req: Request) {
+  const { response } = await requireRole(["admin"]);
   if (response) return response;
 
   try {
+    const { searchParams } = new URL(req.url);
+    const roleParam = searchParams.get("role");
+
     const users = await prisma.user.findMany({
-      where: session!.user.role === "guru" ? { role: "siswa" } : undefined,
+      where: roleParam ? { role: roleParam.toLowerCase() } : undefined,
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(
-      users.map(({ password: _password, ...user }) => ({
-        ...user,
-        name: user.namaLengkap,
-        email: user.email || user.username,
-        namaSekolah: user.namaSekolah,
-        nomorTelepon: user.nomorTelepon,
-      }))
+      users.map(({ password: _unused, ...user }) => {
+        void _unused;
+        return {
+          ...user,
+          name: user.namaLengkap,
+          email: user.email || user.username,
+          namaSekolah: user.namaSekolah,
+          nomorTelepon: user.nomorTelepon,
+        };
+      })
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
-  const { session, response } = await requireRole(["admin", "guru"]);
+  const { response } = await requireRole(["admin"]);
   if (response) return response;
 
   try {
@@ -37,10 +43,6 @@ export async function POST(req: Request) {
     const loginIdentifier = (email || username || "").trim().toLowerCase();
     const normalizedRole = String(role || "guru").toLowerCase();
     const normalizedKelas = typeof kelas === "string" ? kelas.trim() : "";
-
-    if (session!.user.role === "guru" && normalizedRole !== "siswa") {
-      return NextResponse.json({ error: "Guru hanya dapat menambahkan akun siswa" }, { status: 403 });
-    }
 
     if (!loginIdentifier || !password || !displayName) {
       return NextResponse.json({ error: "Email/username, nama lengkap, dan password wajib diisi" }, { status: 400 });
@@ -78,7 +80,8 @@ export async function POST(req: Request) {
       },
     });
 
-    const { password: _password, ...safeUser } = user;
+    const { password: _unused, ...safeUser } = user;
+    void _unused;
     return NextResponse.json({
       ...safeUser,
       name: user.namaLengkap,
@@ -86,7 +89,7 @@ export async function POST(req: Request) {
       namaSekolah: user.namaSekolah,
       nomorTelepon: user.nomorTelepon,
     }, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
   }
 }

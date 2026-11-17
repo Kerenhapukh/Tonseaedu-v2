@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const categoryId = searchParams.get('categoryId');
     const kelasSiswa = searchParams.get('kelas');
 
-    let whereClause: any = {};
+    const whereClause: any = {};
     if (categoryId) {
       whereClause.categoryId = parseInt(categoryId);
     }

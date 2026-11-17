@@ -2,6 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
 const GURU_PREFIXES = ["/guru"];
+const ADMIN_ONLY_PREFIXES = [
+  "/admin/students",
+  "/admin/users",
+  "/admin/guru",
+  "/admin/kosakata",
+  "/api/admin/users",
+];
 const ADMIN_PREFIXES = ["/admin", "/api/admin"];
 const SISWA_PREFIXES = ["/quiz", "/materi", "/kosakata", "/leaderboard", "/category", "/dashboard"];
 
@@ -14,9 +21,17 @@ export const proxy = auth((req) => {
   const isApi = pathname.startsWith("/api/");
   const role = req.auth?.user?.role;
 
+  // Redirect legacy /guru/students route
+  if (pathname === "/guru/students" || pathname.startsWith("/guru/students/")) {
+    const target = role === "admin" ? "/admin/students" : "/guru";
+    return NextResponse.redirect(new URL(target, req.nextUrl.origin));
+  }
+
   let requiredRoles: string[] | null = null;
   if (matchesPrefix(pathname, GURU_PREFIXES)) {
     requiredRoles = ["guru"];
+  } else if (pathname === "/admin" || matchesPrefix(pathname, ADMIN_ONLY_PREFIXES)) {
+    requiredRoles = ["admin"];
   } else if (matchesPrefix(pathname, ADMIN_PREFIXES)) {
     requiredRoles = ["admin", "guru"];
   } else if (matchesPrefix(pathname, SISWA_PREFIXES)) {

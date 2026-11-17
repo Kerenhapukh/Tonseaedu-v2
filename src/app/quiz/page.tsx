@@ -131,7 +131,7 @@ export default function QuizPage() {
     } else {
       setShowResult(true);
     }
-  }, [currentIndex, questions.length, secondsPerQuestion]);
+  }, [currentIndex, questions.length, secondsPerQuestion, setTimeLeft]);
 
   const handleAnswer = (selectedOption: string | null) => {
     if (selectedOption === questions[currentIndex].correct_answer) {

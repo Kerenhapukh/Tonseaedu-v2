@@ -23,9 +23,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const identifier = String(credentials?.identifier ?? "").trim();
         const password = String(credentials?.password ?? "");
-        const role = String(credentials?.role ?? "").trim().toLowerCase();
 
-        if (!identifier || !password || !["admin", "guru", "siswa"].includes(role)) {
+        if (!identifier || !password) {
           throw new LoginError("Akun tidak ditemukan");
         }
 
@@ -34,9 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             OR: [
               { username: { equals: identifier, mode: "insensitive" } },
               { email: { equals: identifier, mode: "insensitive" } },
-              ...(role === "siswa"
-                ? [{ namaLengkap: { equals: identifier, mode: "insensitive" as const } }]
-                : []),
+              { namaLengkap: { equals: identifier, mode: "insensitive" } },
             ],
           },
         });
@@ -45,16 +42,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new LoginError("Akun tidak ditemukan");
         }
 
-        const userRole = String(user.role).toLowerCase();
-        if (userRole !== role) {
-          throw new LoginError(
-            role === "siswa" ? "Akun ini bukan akun siswa" : "Peran tidak sesuai untuk akun ini"
-          );
-        }
-
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
-          throw new LoginError(role === "siswa" ? "Password salah" : "Invalid credentials");
+          throw new LoginError("Password salah");
         }
 
         return {
