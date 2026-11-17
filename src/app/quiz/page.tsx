@@ -104,7 +104,7 @@ export default function QuizPage() {
         setTimeLeft(data.materi.quizDurationSeconds);
       }
 
-      const quizQuestions = (data.data || data) as QuizQuestion[];
+      const quizQuestions = (Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : []) as QuizQuestion[];
       const randomized = shuffle(quizQuestions).map((q) => ({
         ...q,
         options: shuffle(q.options || []),

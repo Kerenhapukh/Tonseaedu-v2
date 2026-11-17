@@ -34,6 +34,13 @@ export async function GET(
       }
     }
 
+    if (Number.isNaN(categoryId) || !categoryId) {
+      return NextResponse.json(
+        { error: 'ID kategori tidak valid' },
+        { status: 400 }
+      );
+    }
+
     // Query Prisma: Wajib materiId: null untuk memisahkan dari kuis gerbang materi
     const whereClause: any = {
       categoryId: categoryId,

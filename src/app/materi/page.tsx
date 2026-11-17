@@ -67,15 +67,20 @@ export default function UserMateriPage() {
           fetch(`/api/materi-progress?username=${encodeURIComponent(username)}`),
         ]);
 
-        const materiData = await materiRes.json();
-        const list = (materiData.data || materiData) as Materi[];
-        const sorted = [...list].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-        setMateriList(sorted);
+        if (materiRes.ok) {
+          const materiData = await materiRes.json();
+          const list = (Array.isArray(materiData?.data) ? materiData.data : Array.isArray(materiData) ? materiData : []) as Materi[];
+          const sorted = [...list].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+          setMateriList(sorted);
+        } else {
+          setMateriList([]);
+        }
 
         if (progressRes.ok) {
           const progressData = await progressRes.json();
+          const progressList = Array.isArray(progressData?.data) ? progressData.data : [];
           const ids = new Set<number>(
-            (progressData.data as ProgressItem[]).map((p) => p.materiId)
+            (progressList as ProgressItem[]).map((p) => p.materiId)
           );
           setCompletedIds(ids);
         }
